@@ -100,3 +100,44 @@ async function upsert(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const userId = await requireUserId(req);
+    const body = (await req.json()) as Body;
+    const key = body.key?.trim();
+    const date =
+      body.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : todayIso();
+
+    if (!key) {
+      return NextResponse.json({ error: "Missing question key." }, { status: 400 });
+    }
+
+    const [question] = await db
+      .select({ id: questions.id })
+      .from(questions)
+      .where(and(eq(questions.userId, userId), eq(questions.key, key)))
+      .limit(1);
+
+    if (!question) {
+      return NextResponse.json({ error: "Unknown habit key." }, { status: 404 });
+    }
+
+    await db
+      .delete(questionResponses)
+      .where(
+        and(
+          eq(questionResponses.userId, userId),
+          eq(questionResponses.questionId, question.id),
+          eq(questionResponses.date, date),
+        ),
+      );
+
+    return NextResponse.json({ key, date, tick: null });
+  } catch (err) {
+    return (
+      authErrorResponse(err) ??
+      NextResponse.json({ error: "Could not save habit." }, { status: 500 })
+    );
+  }
+}

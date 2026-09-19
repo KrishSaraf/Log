@@ -14,6 +14,7 @@ final class SyncEngine {
         defer { isUpdating = false }
 
         do {
+            await pushTombs(context: context)
             let snapshot = try await APIClient.snapshot()
             apply(snapshot, context: context)
             try context.save()
@@ -33,6 +34,16 @@ final class SyncEngine {
 
     func pushQuietly(context: ModelContext) {
         Task { await pushAll(context: context) }
+    }
+
+    private func pushTombs(context: ModelContext) async {
+        let tombs = (try? context.fetch(FetchDescriptor<SyncTombstone>())) ?? []
+        for tomb in tombs {
+            if await push(tombstone: tomb) {
+                context.delete(tomb)
+            }
+        }
+        try? context.save()
     }
 
     @discardableResult
@@ -88,6 +99,11 @@ final class SyncEngine {
         let workouts = (try? context.fetch(FetchDescriptor<LoggedWorkout>())) ?? []
         let meals = (try? context.fetch(FetchDescriptor<MealLog>())) ?? []
         let weights = (try? context.fetch(FetchDescriptor<WeightSample>())) ?? []
+        let tombs = (try? context.fetch(FetchDescriptor<SyncTombstone>())) ?? []
+        let deadMealIds = Set(tombs.filter { $0.kind == "meal" }.map(\.remoteId).filter { !$0.isEmpty })
+        let deadMealKeys = Set(
+            tombs.filter { $0.kind == "meal" }.map { "\($0.day.lowercased())|\($0.key.lowercased())" }
+        )
 
         for remote in snapshot.questions {
             if let local = habits.first(where: { $0.key == remote.key }) {
@@ -142,6 +158,10 @@ final class SyncEngine {
         }
 
         for remote in snapshot.meals {
+            let stamp = "\(remote.day.lowercased())|\(remote.name.lowercased())"
+            if deadMealIds.contains(remote.id ?? "") || deadMealKeys.contains(stamp) {
+                continue
+            }
             if let local = matchMeal(remote, in: meals) {
                 if local.remoteId == nil { local.remoteId = remote.id }
                 if local.needsPush { continue }
@@ -316,14 +336,24 @@ final class SyncEngine {
         case "habit":
             return true
         case "meal":
-            guard !tombstone.remoteId.isEmpty else { return true }
-            return await APIClient.sendFirstOK(
-                method: "DELETE",
-                paths: [
-                    "/api/nutrition/meals/\(tombstone.remoteId)",
-                    "/api/sync/meals/\(tombstone.remoteId)",
-                ]
-            ) != nil
+            if !tombstone.remoteId.isEmpty {
+                let byId = await APIClient.sendFirstOK(
+                    method: "DELETE",
+                    paths: [
+                        "/api/nutrition/meals/\(tombstone.remoteId)",
+                        "/api/sync/meals/\(tombstone.remoteId)",
+                    ]
+                )
+                if byId != nil { return true }
+            }
+            if !tombstone.day.isEmpty, !tombstone.key.isEmpty {
+                let encoded = tombstone.key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? tombstone.key
+                return await APIClient.sendFirstOK(
+                    method: "DELETE",
+                    paths: ["/api/nutrition/meals?date=\(tombstone.day)&name=\(encoded)"]
+                ) != nil
+            }
+            return true
         case "workout":
             guard !tombstone.remoteId.isEmpty else { return true }
             return await APIClient.sendFirstOK(

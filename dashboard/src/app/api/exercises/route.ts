@@ -9,6 +9,19 @@ export const dynamic = "force-dynamic";
 
 const LIMIT = 40;
 
+const exerciseSelect = {
+  id: exercises.id,
+  name: exercises.name,
+  bodyPart: exercises.bodyPart,
+  equipment: exercises.equipment,
+  target: exercises.target,
+  level: exercises.level,
+  gifUrl: exercises.gifUrl,
+  images: exercises.images,
+  instructions: exercises.instructions,
+  secondaryMuscles: exercises.secondaryMuscles,
+} as const;
+
 export async function GET(req: Request) {
   try {
     await requireUserId(req);
@@ -17,27 +30,13 @@ export async function GET(req: Request) {
 
     const rows = q
       ? await db
-          .select({
-            id: exercises.id,
-            name: exercises.name,
-            bodyPart: exercises.bodyPart,
-            equipment: exercises.equipment,
-            target: exercises.target,
-            level: exercises.level,
-          })
+          .select(exerciseSelect)
           .from(exercises)
           .where(ilike(exercises.name, `%${escapeIlike(q)}%`))
           .orderBy(exercises.name)
           .limit(LIMIT)
       : await db
-          .select({
-            id: exercises.id,
-            name: exercises.name,
-            bodyPart: exercises.bodyPart,
-            equipment: exercises.equipment,
-            target: exercises.target,
-            level: exercises.level,
-          })
+          .select(exerciseSelect)
           .from(exercises)
           .orderBy(exercises.name)
           .limit(LIMIT);

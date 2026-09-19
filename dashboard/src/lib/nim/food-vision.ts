@@ -1,25 +1,37 @@
 import { z } from "zod";
 
 import { extractJsonObject, nimChat, toDataUrl, type NimMessage } from "./client";
+import { enrichMealDraft } from "./food-enrich";
 
 const foodItemSchema = z.object({
   name: z.string().min(1),
   quantity: z.number().positive().nullable().optional(),
   unit: z.string().nullable().optional(),
-  calories: z.number().nonnegative().nullable(),
-  proteinG: z.number().nonnegative().nullable(),
-  carbsG: z.number().nonnegative().nullable(),
-  fatG: z.number().nonnegative().nullable(),
-  confidence: z.number().min(0).max(1).optional(),
+  calories: z.coerce.number().nonnegative().nullable(),
+  proteinG: z.coerce.number().nonnegative().nullable(),
+  carbsG: z.coerce.number().nonnegative().nullable(),
+  fatG: z.coerce.number().nonnegative().nullable(),
+  brand: z.string().nullable().optional(),
+  barcode: z.string().nullable().optional(),
+  packaged: z.boolean().optional(),
+  searchQuery: z.string().nullable().optional(),
+  confidence: z.coerce.number().min(0).max(1).optional(),
   notes: z.string().nullable().optional(),
 });
 
 const mealDraftSchema = z.object({
   mealName: z.string().nullable().optional(),
-  mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]).optional(),
+  mealType: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const s = (value ?? "").toLowerCase();
+      if (s === "breakfast" || s === "lunch" || s === "dinner" || s === "snack") return s;
+      return "snack";
+    }),
   foods: z.array(foodItemSchema).min(1),
   assumptions: z.array(z.string()).optional(),
-  overallConfidence: z.number().min(0).max(1).optional(),
+  overallConfidence: z.coerce.number().min(0).max(1).optional(),
 });
 
 export type FoodItemDraft = z.infer<typeof foodItemSchema>;
@@ -35,10 +47,14 @@ Return ONLY a JSON object with this shape:
       "name": string,
       "quantity": number | null,
       "unit": string | null,
-      "calories": number | null,
-      "proteinG": number | null,
-      "carbsG": number | null,
-      "fatG": number | null,
+      "calories": number,
+      "proteinG": number,
+      "carbsG": number,
+      "fatG": number,
+      "brand": string | null,
+      "barcode": string | null,
+      "packaged": boolean,
+      "searchQuery": string | null,
       "confidence": number,
       "notes": string | null
     }
@@ -47,11 +63,69 @@ Return ONLY a JSON object with this shape:
   "overallConfidence": number
 }
 Rules:
-- Identify distinct foods / dishes you can see. Split mixed plates into items when possible.
-- Macros and calories are estimates for the portion shown, not per-100g unless that is all you can infer.
-- Prefer honest nulls over invented precision. If a food is unclear, still list it with lower confidence.
-- Use grams / ml / pieces as units when sensible.
+- Always fill calories, proteinG, carbsG, and fatG for the portion you see. Never leave those four null.
+- If it is a packaged / branded product (noodles, shake, bar, yogurt, drink), set packaged true, copy the brand and product name from the label, put a searchQuery like "Yakult original 80ml" or "YiB instant noodles chicken", and copy a barcode if it is readable.
+- Macros are for the portion shown, not per 100 g, unless the label is clearly per 100 g and the whole pack is that size.
+- Split mixed plates into items when possible.
 - Do not wrap the JSON in markdown.`;
+
+async function parseMealReply(reply: string) {
+  try {
+    return mealDraftSchema.parse(extractJsonObject(reply));
+  } catch {
+    /* Vision models often write markdown. */
+  }
+
+  try {
+    const converted = await nimChat({
+      messages: [
+        {
+          role: "system",
+          content:
+            'Convert nutrition notes into JSON only: {"mealName":string,"mealType":"breakfast"|"lunch"|"dinner"|"snack","foods":[{"name":string,"calories":number,"proteinG":number,"carbsG":number,"fatG":number}]}. No markdown.',
+        },
+        { role: "user", content: reply.slice(0, 4000) },
+      ],
+      temperature: 0,
+      maxTokens: 1200,
+      timeoutSec: 20,
+    });
+    return mealDraftSchema.parse(extractJsonObject(converted));
+  } catch {
+    /* last resort: pull name + numbers from the prose */
+  }
+
+  const guessed = mealFromProse(reply);
+  if (guessed) return mealDraftSchema.parse(guessed);
+  throw new Error("Couldn't read that photo.");
+}
+
+function mealFromProse(text: string) {
+  const name =
+    text.match(/meal\s*name[:\s*]+([A-Za-z][^\n*]{2,70})/i)?.[1]?.trim() ??
+    text.match(/\*\*([A-Za-z][^:*]{3,50})\*\*/)?.[1]?.trim();
+  const calories =
+    Number(text.match(/(\d{2,4})\s*(?:kcal|calories)/i)?.[1] ?? "") || null;
+  const protein =
+    Number(text.match(/(\d{1,3})\s*g?\s*protein/i)?.[1] ?? "") || 0;
+  const carbs =
+    Number(text.match(/(\d{1,3})\s*g?\s*carb/i)?.[1] ?? "") || 0;
+  const fat = Number(text.match(/(\d{1,3})\s*g?\s*fat/i)?.[1] ?? "") || 0;
+  if (!name && calories == null) return null;
+  return {
+    mealName: name || "Meal",
+    mealType: "lunch",
+    foods: [
+      {
+        name: name || "Meal",
+        calories: calories ?? 400,
+        proteinG: protein,
+        carbsG: carbs,
+        fatG: fat,
+      },
+    ],
+  };
+}
 
 export async function analyzeFoodPhoto(input: {
   imageBase64: string;
@@ -74,14 +148,24 @@ export async function analyzeFoodPhoto(input: {
     },
   ];
 
-  const reply = await nimChat({ messages, temperature: 0.1, maxTokens: 1800 });
-  const parsed = mealDraftSchema.parse(extractJsonObject(reply));
-  return {
+  const reply = await nimChat({
+    messages,
+    temperature: 0.1,
+    maxTokens: 1800,
+    timeoutSec: 40,
+  });
+  const parsed = await parseMealReply(reply);
+  const draft: MealDraft = {
     ...parsed,
     mealType: parsed.mealType ?? "snack",
     foods: parsed.foods.map((food) => ({
       ...food,
+      calories: food.calories ?? 0,
+      proteinG: food.proteinG ?? 0,
+      carbsG: food.carbsG ?? 0,
+      fatG: food.fatG ?? 0,
       confidence: food.confidence ?? parsed.overallConfidence ?? 0.5,
     })),
   };
+  return enrichMealDraft(draft);
 }

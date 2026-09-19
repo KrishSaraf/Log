@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ListChecksIcon, NotePencilIcon } from "@phosphor-icons/react/dist/ssr";
 
-import { HabitGrid } from "@/components/habits/habit-grid";
+import { HabitChainBoard } from "@/components/habits/habit-chain";
 import {
   EmptyState,
   PageHeader,
@@ -24,20 +24,12 @@ export default async function LogPage() {
   if (!userId) redirect("/sign-in");
 
   const data = await loadHabitsDashboard(userId);
-  const loggedRanges = data.ranges
-    .map((range) => ({
-      ...range,
-      days: range.days.filter(
-        (day) => day.weightKg !== null || Object.keys(day.cells).length > 0,
-      ),
-    }))
-    .filter((range) => range.days.length > 0);
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Log"
-        description="The habits you track, and how often they get marked done."
+        description="Each habit is a chain of days. Tap to fill the ones you did."
       />
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
@@ -114,23 +106,27 @@ export default async function LogPage() {
       <Panel>
         <PanelHeader>
           <div className="min-w-0">
-            <PanelTitle>Every logged day</PanelTitle>
+            <PanelTitle>Every habit</PanelTitle>
             <PanelDescription>
               {data.daysLogged === 0
-                ? "Days with a habit or weigh-in"
-                : `${data.daysLogged} days`}
+                ? "Each square is a day. Tap to fill it."
+                : `${data.daysLogged} days logged`}
             </PanelDescription>
           </div>
         </PanelHeader>
         <PanelBody>
-          {loggedRanges.length === 0 ? (
+          {data.activeQuestions.length === 0 && data.questions.length === 0 ? (
             <EmptyState
               icon={ListChecksIcon}
               title="No days yet"
               description="Mark a habit and the day will appear here."
             />
           ) : (
-            <HabitGrid questions={data.questions} ranges={loggedRanges} />
+            <HabitChainBoard
+              questions={data.questions}
+              ranges={data.ranges}
+              weekCount={52}
+            />
           )}
         </PanelBody>
       </Panel>

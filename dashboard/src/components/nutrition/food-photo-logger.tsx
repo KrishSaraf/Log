@@ -144,7 +144,7 @@ export function FoodPhotoLogger() {
           <input
             value={hint}
             onChange={(e) => setHint(e.target.value)}
-            placeholder="e.g. home-cooked chicken rice, one bowl"
+            placeholder="e.g. leftover pasta, one plate"
             className="mt-1.5 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-ember-line"
           />
         </label>

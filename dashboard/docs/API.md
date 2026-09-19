@@ -31,11 +31,17 @@ Bearer tokens act as the imported-data user
 | `PATCH` | `/api/workouts/:id` | `{ name?, date?, notes?, durationMinutes? }` |
 | `DELETE` | `/api/workouts/:id` | — |
 | `POST` or `PATCH` | `/api/habits/responses` | `{ date?, key, tick: "yes" \| "partial" \| "no", note? }` — upsert by day + habit key |
-| `POST` | `/api/nutrition/save-meal` | `{ date?, mealName?, mealType?, notes?, foods: [{ name, quantity?, unit?, calories?, proteinG?, carbsG?, fatG? }] }` |
+| `POST` | `/api/nutrition/analyze-photo` | Multipart field `image` (JPEG/PNG/WebP, ≤8MB) + optional `hint`, **or** JSON `{ imageBase64, mimeType?, hint? }`. Returns `{ draft }` with `mealName`, `mealType`, `foods[]` (calories / proteinG / carbsG / fatG). |
+| `POST` | `/api/nutrition/save-meal` | `{ date?, mealName?, mealType?, notes?, foods: [{ name, quantity?, unit?, calories?, proteinG?, carbsG?, fatG? }] }` → `{ mealId, date }` |
+| `POST` | `/api/workouts/analyze-photo` | Same body as nutrition analyze-photo. Returns `{ draft }` with `name`, `date`, `exercises[]` (`exerciseId` / `matchedName` when the library hits). |
 | `POST` | `/api/health/metrics` | `{ date?, kg }` or `{ date?, metric?, value }` — upsert weight (`weight_kg` / `manual`) |
 | `GET` | `/api/exercises?q=` | Library search (876 rows). Returns up to 40 `{ id, name, bodyPart, equipment, target, level }` |
 
 Dates are `YYYY-MM-DD`. All writes are scoped to the authenticated user.
+
+Photo analyze routes need a cookie session (website) or the same bearer token as sync. iOS should send `Authorization: Bearer`, `X-Log-Token`, and `X-Log-Dev: 1`, with multipart field name `image` and a 60s client timeout. HEIC is rejected. Failed vision calls return a plain `{ error }` such as `Couldn't read that photo.` — never provider or model names.
+
+Vision (NVIDIA NIM) runs on the Mac; the phone never sees `NVIDIA_API_KEY`. Set that key in `dashboard/.env.local`. Phone bearer: `AUTH_API_TOKEN`, or `AUTH_SECRET` when `AUTH_DEV_LOGIN=1`.
 
 ## Local check
 

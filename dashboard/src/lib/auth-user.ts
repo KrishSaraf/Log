@@ -49,6 +49,9 @@ async function resolveUserId(req?: Request): Promise<string | null> {
     const token = bearerToken(req);
     if (token && isValidApiToken(token)) {
       id = LEGACY_USER_ID;
+    } else if (process.env.AUTH_DEV_LOGIN === "1" && isLocalPhone(req)) {
+      // Personal LAN: the iOS app always sends X-Log-Dev. Do not require a typed code.
+      id = LEGACY_USER_ID;
     }
   }
 
@@ -74,9 +77,16 @@ async function resolveUserId(req?: Request): Promise<string | null> {
 
 function bearerToken(req: Request): string | null {
   const header = req.headers.get("authorization") ?? req.headers.get("Authorization");
-  if (!header) return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() || null;
+  if (header) {
+    const match = header.match(/^Bearer\s+(.+)$/i);
+    if (match?.[1]?.trim()) return match[1].trim();
+  }
+  const alt = req.headers.get("x-log-token")?.trim();
+  return alt || null;
+}
+
+function isLocalPhone(req: Request): boolean {
+  return req.headers.get("x-log-dev")?.trim() === "1";
 }
 
 function isValidApiToken(token: string): boolean {

@@ -69,6 +69,8 @@ export type NimChatOptions = {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  /** Wall-clock seconds for the provider call. Vision should use ~55 to stay under route maxDuration. */
+  timeoutSec?: number;
 };
 
 export function nimConfig() {
@@ -88,18 +90,34 @@ export function nimConfig() {
 
 /** Pull the first {...} JSON object out of a model reply that may wrap markdown. */
 export function extractJsonObject(text: string): unknown {
-  const trimmed = text.trim();
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    /* fall through */
-  }
-  const start = trimmed.indexOf("{");
-  const end = trimmed.lastIndexOf("}");
+  const stripped = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  const candidates = [stripped];
+  const start = stripped.indexOf("{");
+  const end = stripped.lastIndexOf("}");
   if (start >= 0 && end > start) {
-    return JSON.parse(trimmed.slice(start, end + 1));
+    candidates.push(stripped.slice(start, end + 1));
   }
-  throw new Error("Model reply did not contain valid JSON.");
+
+  let last: unknown;
+  for (const raw of candidates) {
+    for (const attempt of [raw, raw.replace(/,\s*([}\]])/g, "$1")]) {
+      try {
+        last = JSON.parse(attempt);
+        if (last && typeof last === "object") return last;
+      } catch {
+        /* next */
+      }
+    }
+  }
+
+  throw new Error(
+    `Model reply did not contain valid JSON. Preview: ${stripped.slice(0, 180).replace(/\s+/g, " ")}`,
+  );
 }
 
 const cleanEnv = () => ({
@@ -177,7 +195,7 @@ function postJsonHttps(
           if ((res.statusCode ?? 500) >= 400) {
             reject(
               new Error(
-                `NVIDIA NIM HTTP ${res.statusCode}: ${text.slice(0, 300)}`,
+                `Vision HTTP ${res.statusCode}: ${text.slice(0, 300)}`,
               ),
             );
             return;
@@ -188,7 +206,7 @@ function postJsonHttps(
     );
 
     req.on("timeout", () => {
-      req.destroy(new Error(`NVIDIA NIM timed out after ${timeoutMs}ms`));
+      req.destroy(new Error(`Vision request timed out after ${timeoutMs}ms`));
     });
     req.on("error", reject);
     req.write(payload);
@@ -244,11 +262,16 @@ async function postJsonCurl(
   } catch (err) {
     const e = err as { stderr?: string; stdout?: string; message?: string };
     const detail = (e.stderr || e.stdout || e.message || "curl failed").slice(0, 400);
-    throw new Error(`NVIDIA NIM request failed: ${detail}`);
+    throw new Error(`Vision request failed: ${detail}`);
   } finally {
     await unlink(payloadPath).catch(() => undefined);
     await unlink(headerPath).catch(() => undefined);
   }
+}
+
+function isTimeoutError(err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+  return /timed out|timeout|max-time|etimedout/i.test(message);
 }
 
 async function postJson(
@@ -263,9 +286,16 @@ async function postJson(
   try {
     return await postJsonCurl(url, apiKey, body, timeoutSec, ipv4);
   } catch (curlErr) {
+    // A timeout already burned the budget — don't start a second full wait.
+    if (isTimeoutError(curlErr)) {
+      throw new Error(`Vision request timed out after ${timeoutSec}s`);
+    }
     try {
-      return await postJsonHttps(url, apiKey, body, Math.min(timeoutSec, 25) * 1000, ipv4);
+      return await postJsonHttps(url, apiKey, body, timeoutSec * 1000, ipv4);
     } catch (httpsErr) {
+      if (isTimeoutError(httpsErr)) {
+        throw new Error(`Vision request timed out after ${timeoutSec}s`);
+      }
       const a = curlErr instanceof Error ? curlErr.message : String(curlErr);
       const b = httpsErr instanceof Error ? httpsErr.message : String(httpsErr);
       throw new Error(`${a} | https fallback: ${b}`);
@@ -283,13 +313,18 @@ export async function nimChat(options: NimChatOptions): Promise<string> {
     stream: false,
   };
 
-  const raw = await postJson(`${baseUrl}/chat/completions`, apiKey, body, 45);
+  const raw = await postJson(
+    `${baseUrl}/chat/completions`,
+    apiKey,
+    body,
+    options.timeoutSec ?? 45,
+  );
   const data = JSON.parse(raw) as {
     choices?: Array<{ message?: { content?: string | null } }>;
   };
   const content = data.choices?.[0]?.message?.content;
   if (!content) {
-    throw new Error("NVIDIA NIM returned an empty reply.");
+    throw new Error("Vision returned an empty reply.");
   }
   return content;
 }

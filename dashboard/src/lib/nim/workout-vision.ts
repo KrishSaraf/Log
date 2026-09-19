@@ -239,8 +239,26 @@ export async function analyzeMachinePhoto(input: {
     },
   ];
 
-  const reply = await nimChat({ messages, temperature: 0.1, maxTokens: 1600 });
-  const parsed = workoutDraftSchema.parse(extractJsonObject(reply));
+  const reply = await nimChat({
+    messages,
+    temperature: 0.1,
+    maxTokens: 1600,
+    timeoutSec: 55,
+  });
+  let parsed: z.infer<typeof workoutDraftSchema>;
+  try {
+    parsed = workoutDraftSchema.parse(extractJsonObject(reply));
+  } catch {
+    const hint = input.hint?.trim();
+    if (!hint) throw new Error("Couldn't read that photo.");
+    parsed = {
+      name: hint,
+      date: null,
+      notes: null,
+      exercises: [{ name: hint, sets: [], notes: null, confidence: 0.3 }],
+      overallConfidence: 0.3,
+    };
+  }
   return attachMatches(parsed, "photo");
 }
 

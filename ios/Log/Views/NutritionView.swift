@@ -86,9 +86,14 @@ struct NutritionView: View {
     }
 
     private func delete(_ meal: MealLog) {
-        if let remote = meal.remoteId, !remote.isEmpty {
-            context.insert(SyncTombstone(kind: "meal", remoteId: remote))
-        }
+        context.insert(
+            SyncTombstone(
+                kind: "meal",
+                remoteId: meal.remoteId ?? "",
+                key: meal.name,
+                day: meal.day
+            )
+        )
         context.delete(meal)
         try? context.save()
         sync.pushQuietly(context: context)
@@ -408,9 +413,14 @@ struct LogMealSheet: View {
 
     private func deleteMeal() {
         guard let meal else { return }
-        if let remote = meal.remoteId, !remote.isEmpty {
-            context.insert(SyncTombstone(kind: "meal", remoteId: remote))
-        }
+        context.insert(
+            SyncTombstone(
+                kind: "meal",
+                remoteId: meal.remoteId ?? "",
+                key: meal.name,
+                day: meal.day
+            )
+        )
         context.delete(meal)
         try? context.save()
         sync.pushQuietly(context: context)

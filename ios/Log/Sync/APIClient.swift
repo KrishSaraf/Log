@@ -75,6 +75,9 @@ enum APIClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.unreachable }
+        if method.uppercased() == "DELETE", http.statusCode == 404 {
+            return Data()
+        }
         guard (200..<300).contains(http.statusCode) else {
             throw APIError.http(http.statusCode)
         }

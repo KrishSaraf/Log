@@ -6,11 +6,12 @@ const nextConfig: NextConfig = {
   // Pinning the tracing root stops Next from walking up to the root lockfile.
   outputFileTracingRoot: path.resolve(__dirname),
   serverExternalPackages: ["pg"],
-  // Phone camera uploads (FormData) can be a few MB after client compress.
+  // Phone camera uploads (FormData / JSON base64) can be a few MB after compress.
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: "12mb",
     },
+    proxyClientMaxBodySize: "12mb",
   },
 };
 

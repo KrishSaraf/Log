@@ -4,6 +4,7 @@ import { ForkKnifeIcon } from "@phosphor-icons/react/dist/ssr";
 import { desc, eq, sql } from "drizzle-orm";
 
 import { FoodPhotoLogger } from "@/components/nutrition/food-photo-logger";
+import { RecentMealList } from "@/components/nutrition/recent-meal-list";
 import {
   EmptyState,
   MetricCard,
@@ -15,7 +16,7 @@ import {
 } from "@/components/kit";
 import { db, foodEntries, meals } from "@/db";
 import { getDashboardUserId } from "@/lib/auth-user";
-import { formatShortDate, todayIso, toNumber } from "@/lib/format";
+import { todayIso, toNumber } from "@/lib/format";
 import { safely } from "@/lib/safe-query";
 
 export const dynamic = "force-dynamic";
@@ -105,26 +106,15 @@ export default async function NutritionPage() {
               description="Take a photo of your next plate and it will show up here."
             />
           ) : (
-            <ul className="divide-y divide-line">
-              {recent.map((meal) => (
-                <li
-                  key={meal.id}
-                  className="flex items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-text">
-                      {meal.name || "Meal"}
-                    </p>
-                    <p className="text-xs text-text-faint">
-                      {formatShortDate(meal.date)} · {meal.mealType}
-                    </p>
-                  </div>
-                  <p className="num shrink-0 text-sm text-text-muted">
-                    {Math.round(toNumber(meal.calories) ?? 0)} kcal
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <RecentMealList
+              meals={recent.map((meal) => ({
+                id: meal.id,
+                date: meal.date,
+                name: meal.name,
+                mealType: meal.mealType,
+                calories: toNumber(meal.calories) ?? 0,
+              }))}
+            />
           )}
         </PanelBody>
       </Panel>

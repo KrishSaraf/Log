@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { AuthRequiredError, requireUserId } from "@/lib/auth-user";
+import { logPhotoAnalyzeFailure, photoRouteError } from "@/lib/nim/photo-errors";
 import { readPhotoBody } from "@/lib/nim/photo-body";
 import { analyzeMachinePhoto } from "@/lib/nim/workout-vision";
 
@@ -17,8 +18,8 @@ export async function POST(req: Request) {
     if (err instanceof AuthRequiredError) {
       return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     }
-    const message = err instanceof Error ? err.message : "Could not read machine photo.";
-    const status = /missing image|too large|not an image|HEIC/i.test(message) ? 400 : 500;
-    return NextResponse.json({ error: message }, { status });
+    logPhotoAnalyzeFailure("workouts/analyze-photo", err);
+    const { error, status } = photoRouteError(err);
+    return NextResponse.json({ error }, { status });
   }
 }
