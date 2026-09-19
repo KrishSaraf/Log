@@ -8,39 +8,106 @@ struct Screen: ViewModifier {
     }
 }
 
-struct MetricTile: View {
-    let label: String
-    let value: String
-    let unit: String
-    var tint: Color = Palette.text
+struct SectionLabel: View {
+    let text: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(label.uppercased())
-                .font(.system(size: 11, weight: .semibold, design: .default))
-                .tracking(0.8)
+        Text(text)
+            .font(.system(size: 12, weight: .semibold))
+            .tracking(1.1)
+            .foregroundStyle(Palette.muted)
+    }
+}
+
+struct PrimaryButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 16, weight: .semibold, design: .serif))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Palette.rust, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .foregroundStyle(Palette.ink)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct DayStrip: View {
+    let calories: Double?
+    let exercise: Double?
+    let stand: Double?
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 0) {
+            stripColumn(title: "Move", value: Formatters.int(calories), unit: "kcal", tint: Palette.move)
+            divider
+            stripColumn(title: "Exercise", value: Formatters.int(exercise), unit: "min", tint: Palette.exercise)
+            divider
+            stripColumn(title: "Stand", value: Formatters.oneDecimal(stand), unit: "hr", tint: Palette.stand)
+        }
+        .padding(.vertical, 18)
+        .padding(.horizontal, 8)
+        .background(Palette.surface)
+        .overlay(Rectangle().stroke(Palette.line, lineWidth: 1))
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Palette.line)
+            .frame(width: 1, height: 54)
+    }
+
+    private func stripColumn(title: String, value: String, unit: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Palette.muted)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
-                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                    .font(Palette.number)
                     .monospacedDigit()
                     .foregroundStyle(tint)
-                    .minimumScaleFactor(0.6)
+                    .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                if !unit.isEmpty && value != "—" {
+                if value != "—" {
                     Text(unit)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(Palette.muted)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Palette.line, lineWidth: 1)
-        )
+        .padding(.horizontal, 10)
+    }
+}
+
+struct QuietStat: View {
+    let label: String
+    let value: String
+    let unit: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Palette.muted)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(value)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.ink)
+                if value != "—" {
+                    Text(unit)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Palette.muted)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -51,50 +118,37 @@ struct AccessBanner: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Palette.text)
+                .font(Palette.title)
+                .foregroundStyle(Palette.ink)
             Text(message)
-                .font(.system(size: 14))
+                .font(.system(size: 15))
                 .foregroundStyle(Palette.muted)
-                .fixedSize(horizontal: false, vertical: true)
-
             if showsButton {
-                Button(action: action) {
-                    Text(buttonTitle)
-                        .font(.system(size: 14, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Palette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .foregroundStyle(.black)
-                }
-                .buttonStyle(.plain)
+                PrimaryButton(title: buttonTitle, action: action)
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Palette.line, lineWidth: 1)
-        )
+        .background(Palette.surface)
+        .overlay(Rectangle().stroke(Palette.line, lineWidth: 1))
     }
 
     private var title: String {
         switch access {
-        case .unavailable: return "Health isn’t available here"
+        case .unavailable: return "Open this on your iPhone"
         case .denied: return "Health access is off"
-        default: return "Connect Apple Watch"
+        default: return "Show today’s Watch numbers"
         }
     }
 
     private var message: String {
         switch access {
         case .unavailable:
-            return "Open Log on your iPhone, paired with your Apple Watch."
+            return "Log needs the iPhone that is paired with your Watch."
         case .denied:
             return "Turn on the categories you want in Settings → Health → Data Access & Devices → Log."
         default:
-            return "Allow Log to read activity, workouts, sleep, and heart rate."
+            return "Allow activity, workouts, sleep, and heart rate."
         }
     }
 
@@ -104,29 +158,6 @@ struct AccessBanner: View {
 
     private var showsButton: Bool {
         access == .needed || access == .unknown || access == .denied
-    }
-}
-
-struct EmptyPanel: View {
-    let title: String
-    let message: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Palette.text)
-            Text(message)
-                .font(.system(size: 14))
-                .foregroundStyle(Palette.muted)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Palette.line, lineWidth: 1)
-        )
     }
 }
 
@@ -142,7 +173,7 @@ enum Formatters {
     }
 
     static func duration(_ seconds: TimeInterval) -> String {
-        let minutes = Int(seconds / 60)
+        let minutes = Int((seconds / 60).rounded())
         if minutes < 60 { return "\(minutes) min" }
         let hours = minutes / 60
         let rem = minutes % 60

@@ -8,9 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		040C11F1574472C31610202A /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E872181BF019AA8303553F2E /* TodayView.swift */; };
+		16C3E73DE3A849248D253E87 /* WorkoutLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C725F87A95981B1D6764A5C /* WorkoutLog.swift */; };
 		190230ED580AC0485B237429 /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 473130274AEB934B1299B41B /* HealthView.swift */; };
 		3AC5BB426E959E4349B7D8A6 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CF910480BF404A82508F82 /* JournalView.swift */; };
 		548CB1A85C187141CF69D740 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD93A0DD6E2A514176786B0 /* Components.swift */; };
+		5BE4716C8A56F2B354A6DABD /* LogWorkoutSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE2F6FE1362C0A6D3BFB4B8 /* LogWorkoutSheet.swift */; };
 		72B84C6C2A330567459D9B5F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5849654130C779CC299FB146 /* Assets.xcassets */; };
 		B67BB6F33C1422EF6DA042DB /* HealthSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA85610519D85ABDF24CE62 /* HealthSnapshot.swift */; };
 		B6B08E7F26523EC7938CA238 /* LogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1734A367D06828FA30C333A /* LogApp.swift */; };
@@ -23,6 +25,7 @@
 /* Begin PBXFileReference section */
 		1A015C2597FCA0B6CA2D8526 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		1FA85610519D85ABDF24CE62 /* HealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSnapshot.swift; sourceTree = "<group>"; };
+		2BE2F6FE1362C0A6D3BFB4B8 /* LogWorkoutSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWorkoutSheet.swift; sourceTree = "<group>"; };
 		3DD93A0DD6E2A514176786B0 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		473130274AEB934B1299B41B /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
 		54CF910480BF404A82508F82 /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
@@ -30,6 +33,7 @@
 		7326E5608E0C7C63BD294CA7 /* Log.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Log.entitlements; sourceTree = "<group>"; };
 		831615F535115E288E6F1058 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		895DFBCA0533DB34ED7C7501 /* WorkoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsView.swift; sourceTree = "<group>"; };
+		9C725F87A95981B1D6764A5C /* WorkoutLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLog.swift; sourceTree = "<group>"; };
 		CBB17BAD1C3C09126EFC6FDC /* Log.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Log.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E872181BF019AA8303553F2E /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		EE0376EC18336973E2DB6CE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -38,6 +42,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0734CE120D58F4B5F16A6EFE /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				9C725F87A95981B1D6764A5C /* WorkoutLog.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 		4D3374056E2D23CDCD70AE82 /* Theme */ = {
 			isa = PBXGroup;
 			children = (
@@ -60,6 +72,7 @@
 				3DD93A0DD6E2A514176786B0 /* Components.swift */,
 				473130274AEB934B1299B41B /* HealthView.swift */,
 				54CF910480BF404A82508F82 /* JournalView.swift */,
+				2BE2F6FE1362C0A6D3BFB4B8 /* LogWorkoutSheet.swift */,
 				FB9BBFB198F09C2EDE3FC0D8 /* RootView.swift */,
 				E872181BF019AA8303553F2E /* TodayView.swift */,
 				895DFBCA0533DB34ED7C7501 /* WorkoutsView.swift */,
@@ -75,6 +88,7 @@
 				7326E5608E0C7C63BD294CA7 /* Log.entitlements */,
 				F1734A367D06828FA30C333A /* LogApp.swift */,
 				8F60905C28C32790B67BAF58 /* Health */,
+				0734CE120D58F4B5F16A6EFE /* Models */,
 				4D3374056E2D23CDCD70AE82 /* Theme */,
 				58D41C37F98C5A968C1813D5 /* Views */,
 			);
@@ -129,7 +143,7 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					DDAB0E0DC1B4C8BE3E10DE6E = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = 5Y3HC4LWAC;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -175,9 +189,11 @@
 				190230ED580AC0485B237429 /* HealthView.swift in Sources */,
 				3AC5BB426E959E4349B7D8A6 /* JournalView.swift in Sources */,
 				B6B08E7F26523EC7938CA238 /* LogApp.swift in Sources */,
+				5BE4716C8A56F2B354A6DABD /* LogWorkoutSheet.swift in Sources */,
 				D34F67E389E75DE1ED85B77B /* Palette.swift in Sources */,
 				C6A078C448F0B0F6DFAA52D3 /* RootView.swift in Sources */,
 				040C11F1574472C31610202A /* TodayView.swift in Sources */,
+				16C3E73DE3A849248D253E87 /* WorkoutLog.swift in Sources */,
 				C31CE108C5FDE5889C34B22F /* WorkoutsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -258,7 +274,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 5Y3HC4LWAC;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Log/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -284,7 +300,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 5Y3HC4LWAC;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Log/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

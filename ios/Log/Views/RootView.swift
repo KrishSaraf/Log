@@ -14,7 +14,7 @@ struct RootView: View {
             JournalView()
                 .tabItem { Label("Log", systemImage: "text.alignleft") }
         }
-        .tint(Palette.accent)
+        .tint(Palette.rust)
         .task {
             await health.prepare()
         }

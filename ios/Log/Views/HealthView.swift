@@ -7,30 +7,53 @@ struct HealthView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 20) {
                     if health.access != .authorized {
                         AccessBanner(access: health.access, action: handleAccess)
                     } else {
-                        MetricTile(label: "Weight", value: Formatters.oneDecimal(health.snapshot.weightKg), unit: "kg")
-                        MetricTile(label: "Heart rate, today", value: Formatters.int(health.snapshot.averageHeartRate), unit: "bpm avg")
-                        MetricTile(label: "Resting heart rate", value: Formatters.int(health.snapshot.restingHeartRate), unit: "bpm")
-                        MetricTile(label: "Sleep last night", value: Formatters.oneDecimal(health.snapshot.sleepHours), unit: "hr")
-                        MetricTile(label: "Steps today", value: Formatters.int(health.snapshot.steps), unit: "")
-
-                        if let updated = health.snapshot.lastUpdated {
-                            Text("Updated \(Formatters.time(updated))")
-                                .font(.system(size: 12))
-                                .foregroundStyle(Palette.muted)
-                        }
+                        DayStrip(
+                            calories: health.snapshot.activeCalories,
+                            exercise: health.snapshot.exerciseMinutes,
+                            stand: health.snapshot.standHours
+                        )
+                        stat("Weight", Formatters.oneDecimal(health.snapshot.weightKg), "kg")
+                        stat("Heart rate today", Formatters.int(health.snapshot.averageHeartRate), "bpm avg")
+                        stat("Resting heart rate", Formatters.int(health.snapshot.restingHeartRate), "bpm")
+                        stat("Sleep last night", Formatters.oneDecimal(health.snapshot.sleepHours), "hr")
+                        stat("Steps today", Formatters.int(health.snapshot.steps), "")
                     }
                 }
-                .padding(16)
+                .padding(20)
             }
             .refreshable { await health.refresh() }
             .modifier(Screen())
             .navigationTitle("Health")
             .navigationBarTitleDisplayMode(.large)
             .toolbarColorScheme(.dark, for: .navigationBar)
+        }
+    }
+
+    private func stat(_ label: String, _ value: String, _ unit: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label)
+                .font(.system(size: 16, design: .serif))
+                .foregroundStyle(Palette.ink)
+            Spacer()
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(value)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.ink)
+                if value != "—" && !unit.isEmpty {
+                    Text(unit)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Palette.muted)
+                }
+            }
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Palette.line).frame(height: 1)
         }
     }
 

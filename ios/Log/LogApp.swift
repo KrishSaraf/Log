@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct LogApp: App {
@@ -9,6 +10,8 @@ struct LogApp: App {
             RootView()
                 .environment(health)
                 .preferredColorScheme(.dark)
+                .tint(Palette.rust)
         }
+        .modelContainer(for: [LoggedWorkout.self, LoggedExercise.self, LoggedSet.self])
     }
 }
