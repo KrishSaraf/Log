@@ -1,0 +1,199 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: exercises
+    description: Exercise library operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /exercises:
+    get:
+      operationId: listExercises
+      tags: [exercises]
+      summary: List exercises
+      description: Returns a paginated list of exercises with optional filters
+      parameters:
+        - name: search
+          in: query
+          description: Search term to filter exercises by name
+          schema:
+            type: string
+        - name: bodyPart
+          in: query
+          description: Filter by body part/muscle group
+          schema:
+            type: string
+        - name: equipment
+          in: query
+          description: Filter by equipment type
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            default: 24
+      responses:
+        "200":
+          description: List of exercises
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseListResponse"
+  /exercises/{id}:
+    get:
+      operationId: getExercise
+      tags: [exercises]
+      summary: Get exercise by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Exercise detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Exercise"
+        "404":
+          description: Exercise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /exercises/filters:
+    get:
+      operationId: getExerciseFilters
+      tags: [exercises]
+      summary: Get available filter options
+      description: Returns all available body parts and equipment types
+      responses:
+        "200":
+          description: Available filter options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseFilters"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        bodyPart:
+          type: string
+        equipment:
+          type: string
+        gifUrl:
+          type: string
+        target:
+          type: string
+        secondaryMuscles:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+        level:
+          type: string
+      required:
+        - id
+        - name
+        - bodyPart
+        - equipment
+        - gifUrl
+        - target
+        - secondaryMuscles
+        - instructions
+        - images
+        - level
+    ExerciseListResponse:
+      type: object
+      properties:
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/Exercise"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - exercises
+        - total
+        - page
+        - limit
+        - totalPages
+    ExerciseFilters:
+      type: object
+      properties:
+        bodyParts:
+          type: array
+          items:
+            type: string
+        equipment:
+          type: array
+          items:
+            type: string
+      required:
+        - bodyParts
+        - equipment
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message

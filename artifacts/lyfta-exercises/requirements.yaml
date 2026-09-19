@@ -1,0 +1,18 @@
+packages:
+  "framer-motion": "For fluid card interactions, page transitions, and modal animations required for a premium feel"
+  "clsx": "Utility for conditionally joining classNames"
+  "tailwind-merge": "Utility for merging Tailwind classes safely"
+  "@hookform/resolvers": "For Zod validation in the exercise creation form"
+  "react-hook-form": "For robust form state management"
+
+images:
+  - path: "artifacts/lyfta-exercises/public/images/hero-bg.png"
+    description: "Dark, moody, high-contrast gym atmosphere with dramatic red and orange lighting, subtle smoke, abstract fitness background"
+    aspect_ratio: "16:9"
+  - path: "artifacts/lyfta-exercises/public/images/logo.png"
+    description: "Minimalist, aggressive, sharp geometric letter L fitness logo in vibrant orange gradient on transparent background"
+    aspect_ratio: "1:1"
+
+notes:
+  - Assuming @workspace/api-client-react is available for GET queries.
+  - Adding simulated mutation hooks for POST/PUT/DELETE to fulfill the aggressive CRUD UI requirements, even though they might 404 on the backend.
