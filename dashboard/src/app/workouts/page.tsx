@@ -3,11 +3,11 @@ import { redirect } from "next/navigation";
 import { BarbellIcon, ListMagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import { count, desc, eq } from "drizzle-orm";
 
-import { auth } from "@/auth";
 import { WorkoutAiLogger } from "@/components/workouts/workout-ai-logger";
 import { SessionHistory } from "@/components/workouts/session-history";
 import { MetricCard, Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/kit";
 import { db, exercises, workoutExercises, workouts, workoutSets } from "@/db";
+import { getDashboardUserId } from "@/lib/auth-user";
 import { formatShortDate } from "@/lib/format";
 import { loadHabitsDashboard } from "@/lib/habits";
 import { safely } from "@/lib/safe-query";
@@ -17,9 +17,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Workouts" };
 
 export default async function WorkoutsPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
-  const userId = session.user.id;
+  const userId = await getDashboardUserId();
+  if (!userId) redirect("/sign-in");
 
   const [data, setCount, libraryCount, lastDate] = await Promise.all([
     loadHabitsDashboard(userId),

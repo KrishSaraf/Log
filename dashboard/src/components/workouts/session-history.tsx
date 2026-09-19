@@ -37,8 +37,15 @@ export function SessionHistory({ sessions }: { sessions: WorkoutSession[] }) {
             <div className="flex items-baseline justify-between gap-3 px-4 py-2.5">
               <div className="min-w-0">
                 <p className="truncate text-sm text-text">{session.name}</p>
+                <p className="mt-0.5 text-xs text-text-muted">
+                  {formatDayWeekday(session.date)}
+                  {" · "}
+                  {session.exerciseCount === 1
+                    ? "1 exercise"
+                    : `${session.exerciseCount} exercises`}
+                </p>
                 {session.notes ? (
-                  <p className="mt-0.5 truncate text-xs text-text-muted">{session.notes}</p>
+                  <p className="mt-0.5 truncate text-xs text-text-faint">{session.notes}</p>
                 ) : null}
               </div>
               <time

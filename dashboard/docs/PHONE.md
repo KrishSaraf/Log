@@ -2,6 +2,9 @@
 
 The app is a normal website you open in Safari or Chrome. AI photo/text calls stay on the laptop — the phone never sees your NVIDIA key.
 
+The native iPhone app can also call the JSON APIs in `docs/API.md`
+(`Authorization: Bearer <AUTH_API_TOKEN>`). Website and phone share one Postgres.
+
 ## Same Wi‑Fi (dev on your Mac)
 
 1. On the Mac, leave the dashboard running (`npm run dev` in `dashboard/` — binds `0.0.0.0:3001`).

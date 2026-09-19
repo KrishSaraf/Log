@@ -20,6 +20,7 @@ struct LogApp: App {
             HabitEntry.self,
             WeightSample.self,
             MealLog.self,
+            SyncTombstone.self,
         ])
     }
 }

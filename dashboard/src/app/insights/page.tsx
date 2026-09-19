@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr";
 import { desc, eq } from "drizzle-orm";
 
-import { auth } from "@/auth";
 import {
   EmptyState,
   PageHeader,
@@ -13,6 +12,7 @@ import {
   PanelTitle,
 } from "@/components/kit";
 import { db, insights } from "@/db";
+import { getDashboardUserId } from "@/lib/auth-user";
 import { formatShortDate } from "@/lib/format";
 import { safely } from "@/lib/safe-query";
 
@@ -21,9 +21,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Insights" };
 
 export default async function InsightsPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
-  const userId = session.user.id;
+  const userId = await getDashboardUserId();
+  if (!userId) redirect("/sign-in");
 
   const rows = await safely(
     () =>

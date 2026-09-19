@@ -37,8 +37,7 @@ export const authConfig = {
 
       const isPublic =
         pathname.startsWith("/sign-in") ||
-        pathname.startsWith("/api/auth") ||
-        pathname.startsWith("/api/health") ||
+        pathname.startsWith("/api/") ||
         pathname === "/manifest.webmanifest" ||
         pathname === "/sw.js" ||
         pathname.startsWith("/icon-");
@@ -49,12 +48,14 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user?.id) {
         token.sub = user.id;
+        token.id = user.id;
       }
       return token;
     },
     session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
+      if (session.user) {
+        const id = (typeof token.id === "string" && token.id) || token.sub;
+        if (id) session.user.id = id;
       }
       return session;
     },

@@ -32,8 +32,12 @@ NEXT_PUBLIC_AUTH_DEV_LOGIN=1
 ```
 
 That shows **Continue as Krish (local)** on `/sign-in` and signs you in as the
-legacy owner, so your imported spreadsheet data is visible. Turn both off before
-any real deploy.
+legacy owner (`00000000-0000-4000-8000-000000000001` / `legacy@log.local`),
+so imported history is visible immediately. Turn both off before any real deploy.
+
+A first Google/Apple sign-in automatically moves that history onto the new
+account once (idempotent). See `docs/API.md` for the phone bearer token
+(`Authorization: Bearer <AUTH_API_TOKEN>`).
 
 Google/Apple buttons only appear after you set their secrets and
 `NEXT_PUBLIC_AUTH_GOOGLE=1` / `NEXT_PUBLIC_AUTH_APPLE=1`.
@@ -55,18 +59,22 @@ Apple requires HTTPS for production return URLs. Localhost is fine for developme
 
 ## Claiming imported spreadsheet data
 
-The multi-user migration assigned existing rows to a legacy owner (`legacy@log.local`).
-After you sign in once with Google or Apple:
+Imported rows start on the legacy owner (`legacy@log.local`). Local test login
+uses that same id, so no claim is needed.
+
+Signing in with Google or Apple claims the rows onto that user automatically
+the first time (habits, responses, workouts, meals, health, insights). The
+manual script is only a fallback:
 
 ```bash
 cd dashboard
 LEGACY_OWNER_EMAIL=you@gmail.com CLAIM=1 npx tsx scripts/migrate-multiuser.ts
 ```
 
-That moves habits / workouts / meals / health / insights onto your account.
-
 ## How isolation works
 
-- Middleware sends anonymous visitors to `/sign-in`.
-- Pages and write APIs load or insert with `session.user.id`.
-- New users get a default habit set on first sign-in (`createUser` event).
+- Middleware sends anonymous visitors to `/sign-in`. JSON `/api/*` routes
+  authenticate themselves (cookie or `Authorization: Bearer`).
+- Pages and write APIs load or insert with the signed-in user id (after any
+  one-time claim of imported rows).
+- New users get a default habit set on first sign-in if they have none.

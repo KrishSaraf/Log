@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ListChecksIcon, NotePencilIcon } from "@phosphor-icons/react/dist/ssr";
 
-import { auth } from "@/auth";
+import { HabitGrid } from "@/components/habits/habit-grid";
 import {
   EmptyState,
   PageHeader,
@@ -12,6 +12,7 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/kit";
+import { getDashboardUserId } from "@/lib/auth-user";
 import { habitCompletion, loadHabitsDashboard } from "@/lib/habits";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +20,18 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Log" };
 
 export default async function LogPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  const userId = await getDashboardUserId();
+  if (!userId) redirect("/sign-in");
 
-  const data = await loadHabitsDashboard(session.user.id);
+  const data = await loadHabitsDashboard(userId);
+  const loggedRanges = data.ranges
+    .map((range) => ({
+      ...range,
+      days: range.days.filter(
+        (day) => day.weightKg !== null || Object.keys(day.cells).length > 0,
+      ),
+    }))
+    .filter((range) => range.days.length > 0);
 
   return (
     <div className="space-y-8">
@@ -101,6 +110,30 @@ export default async function LogPage() {
           </PanelBody>
         </Panel>
       </div>
+
+      <Panel>
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Every logged day</PanelTitle>
+            <PanelDescription>
+              {data.daysLogged === 0
+                ? "Days with a habit or weigh-in"
+                : `${data.daysLogged} days`}
+            </PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody>
+          {loggedRanges.length === 0 ? (
+            <EmptyState
+              icon={ListChecksIcon}
+              title="No days yet"
+              description="Mark a habit and the day will appear here."
+            />
+          ) : (
+            <HabitGrid questions={data.questions} ranges={loggedRanges} />
+          )}
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

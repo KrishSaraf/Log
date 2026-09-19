@@ -4,12 +4,16 @@ import UIKit
 
 struct HealthView: View {
     @Environment(HealthKitService.self) private var health
+    @Environment(\.modelContext) private var context
+    @Environment(SyncEngine.self) private var sync
     @Query(sort: \WeightSample.day, order: .reverse) private var weights: [WeightSample]
+    @State private var logging = false
+    @State private var editing: WeightSample?
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: 20) {
                     if health.access != .authorized {
                         AccessBanner(access: health.access, action: handleAccess)
                     } else {
@@ -27,33 +31,49 @@ struct HealthView: View {
                     let latest = weights.first?.kg ?? health.snapshot.weightKg
                     stat("Weight", Formatters.oneDecimal(latest), "kg")
 
-                    if weights.count > 1 {
+                    Button("Log weight") { logging = true }
+                        .buttonStyle(BlockButtonStyle())
+
+                    if !weights.isEmpty {
                         SectionLabel(text: "WEIGHT HISTORY")
-                        ForEach(weights.prefix(30), id: \.day) { sample in
-                            HStack {
-                                Text(DayStamp.pretty(sample.day))
-                                    .font(.system(size: 15, design: .serif))
-                                    .foregroundStyle(Palette.ink)
-                                Spacer()
-                                Text("\(Formatters.oneDecimal(sample.kg)) kg")
-                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                    .monospacedDigit()
-                                    .foregroundStyle(Palette.ink)
+                        Text("\(weights.count) readings")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Palette.muted)
+                        ForEach(weights, id: \.day) { sample in
+                            Button { editing = sample } label: {
+                                HStack {
+                                    Text(DayStamp.pretty(sample.day))
+                                        .font(.system(size: 15, design: .serif))
+                                        .foregroundStyle(Palette.ink)
+                                    Spacer()
+                                    Text("\(Formatters.oneDecimal(sample.kg)) kg")
+                                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                        .monospacedDigit()
+                                        .foregroundStyle(Palette.ink)
+                                }
+                                .padding(.vertical, 8)
+                                .overlay(alignment: .bottom) {
+                                    Rectangle().fill(Palette.line).frame(height: 1)
+                                }
                             }
-                            .padding(.vertical, 8)
-                            .overlay(alignment: .bottom) {
-                                Rectangle().fill(Palette.line).frame(height: 1)
-                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
                 .padding(20)
             }
-            .refreshable { await health.refresh() }
+            .refreshable {
+                await health.refresh()
+                await sync.refresh(context: context)
+            }
             .modifier(Screen())
             .navigationTitle("Health")
             .navigationBarTitleDisplayMode(.large)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .sheet(isPresented: $logging) { LogWeightSheet() }
+            .sheet(item: $editing) { sample in
+                LogWeightSheet(sample: sample)
+            }
         }
     }
 

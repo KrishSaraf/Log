@@ -7,15 +7,29 @@ final class LoggedWorkout {
     var name: String
     var date: Date
     var notes: String
+    var remoteId: String? = nil
+    var needsPush: Bool = false
+    var updatedAt: Date = Date()
     @Relationship(deleteRule: .cascade, inverse: \LoggedExercise.workout)
     var exercises: [LoggedExercise]
 
-    init(name: String, date: Date = .now, notes: String = "", exercises: [LoggedExercise] = []) {
-        self.id = UUID()
+    init(
+        id: UUID = UUID(),
+        name: String,
+        date: Date = .now,
+        notes: String = "",
+        exercises: [LoggedExercise] = [],
+        remoteId: String? = nil,
+        needsPush: Bool = true
+    ) {
+        self.id = id
         self.name = name
         self.date = date
         self.notes = notes
         self.exercises = exercises
+        self.remoteId = remoteId
+        self.needsPush = needsPush
+        self.updatedAt = .now
     }
 }
 

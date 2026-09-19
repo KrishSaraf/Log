@@ -4,6 +4,8 @@ import SwiftData
 struct RootView: View {
     @Environment(HealthKitService.self) private var health
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var sync = SyncEngine()
 
     var body: some View {
         TabView {
@@ -19,9 +21,16 @@ struct RootView: View {
                 .tabItem { Label("Log", systemImage: "checkmark.rectangle") }
         }
         .tint(Palette.rust)
+        .environment(sync)
         .task {
             AppSeed.runIfNeeded(context: context)
             await health.prepare()
+            await sync.refresh(context: context)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                Task { await sync.refresh(context: context) }
+            }
         }
     }
 }

@@ -1,6 +1,13 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq } from "drizzle-orm";
 
-import { db, healthMetrics, questionResponses, questions, workouts } from "@/db";
+import {
+  db,
+  healthMetrics,
+  questionResponses,
+  questions,
+  workoutExercises,
+  workouts,
+} from "@/db";
 import { toNumber } from "@/lib/format";
 import { safely } from "@/lib/safe-query";
 
@@ -40,6 +47,7 @@ export type WorkoutSession = {
   date: string;
   name: string;
   notes: string | null;
+  exerciseCount: number;
 };
 
 export type HabitsDashboard = {
@@ -118,7 +126,8 @@ function splitRanges(dates: string[], gapDays = 21): { start: string; end: strin
 }
 
 export async function loadHabitsDashboard(userId: string): Promise<HabitsDashboard> {
-  const [questionRows, responseRows, weightRows, workoutRows] = await Promise.all([
+  const [questionRows, responseRows, weightRows, workoutRows, exerciseCounts] =
+    await Promise.all([
     safely(
       () =>
         db
@@ -190,7 +199,23 @@ export async function loadHabitsDashboard(userId: string): Promise<HabitsDashboa
       [] as { id: string; date: string; name: string | null; notes: string | null }[],
       "workout sessions",
     ),
+    safely(
+      () =>
+        db
+          .select({
+            workoutId: workoutExercises.workoutId,
+            n: count(),
+          })
+          .from(workoutExercises)
+          .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+          .where(eq(workouts.userId, userId))
+          .groupBy(workoutExercises.workoutId),
+      [] as { workoutId: string; n: number }[],
+      "workout exercise counts",
+    ),
   ]);
+
+  const countByWorkout = new Map(exerciseCounts.map((row) => [row.workoutId, row.n]));
 
   if (questionRows.length === 0 && weightRows.length === 0 && workoutRows.length === 0) {
     return EMPTY;
@@ -249,6 +274,7 @@ export async function loadHabitsDashboard(userId: string): Promise<HabitsDashboa
       date: row.date,
       name: row.name?.trim() || "Session",
       notes: row.notes,
+      exerciseCount: countByWorkout.get(row.id) ?? 0,
     })),
   };
 }

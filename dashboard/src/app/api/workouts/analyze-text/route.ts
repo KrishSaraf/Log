@@ -8,7 +8,7 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
-    await requireUserId();
+    await requireUserId(req);
     const body = (await req.json()) as { text?: string; date?: string };
     if (!body.text?.trim()) {
       return NextResponse.json({ error: "Write what you did." }, { status: 400 });

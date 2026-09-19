@@ -4,6 +4,7 @@ import UIKit
 
 struct TodayView: View {
     @Environment(HealthKitService.self) private var health
+    @Environment(SyncEngine.self) private var sync
     @Environment(\.modelContext) private var context
     @Query(sort: \Habit.orderIndex) private var habits: [Habit]
     @Query private var entries: [HabitEntry]
@@ -12,10 +13,21 @@ struct TodayView: View {
     @Query(sort: \WeightSample.day, order: .reverse) private var weights: [WeightSample]
     @State private var loggingWorkout = false
     @State private var loggingMeal = false
+    @State private var editingWorkout: LoggedWorkout?
+    @State private var editingMeal: MealLog?
 
     private var day: String { DayStamp.today() }
     private var activeHabits: [Habit] { habits.filter(\.isActive) }
     private var todaysMeals: [MealLog] { meals.filter { $0.day == day } }
+    private var recentLoggedDays: [String] {
+        let today = day
+        return Array(
+            Set(entries.map(\.day))
+                .filter { $0 != today }
+                .sorted(by: >)
+                .prefix(5)
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -58,6 +70,7 @@ struct TodayView: View {
                                         day: day,
                                         value: next
                                     )
+                                    sync.pushQuietly(context: context)
                                 }
                             }
                         }
@@ -78,9 +91,13 @@ struct TodayView: View {
                                 .monospacedDigit()
                                 .foregroundStyle(Palette.ink)
                             ForEach(todaysMeals, id: \.id) { meal in
-                                Text("\(meal.name)  \(meal.calories) kcal")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Palette.muted)
+                                Button { editingMeal = meal } label: {
+                                    Text("\(meal.name)  \(meal.calories) kcal")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Palette.muted)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -88,7 +105,10 @@ struct TodayView: View {
                     if let mine = logged.first {
                         VStack(alignment: .leading, spacing: 8) {
                             SectionLabel(text: "LAST SESSION")
-                            LoggedWorkoutRow(workout: mine)
+                            Button { editingWorkout = mine } label: {
+                                LoggedWorkoutRow(workout: mine)
+                            }
+                            .buttonStyle(.plain)
                         }
                     } else if let watch = health.snapshot.workouts.first {
                         VStack(alignment: .leading, spacing: 8) {
@@ -96,16 +116,34 @@ struct TodayView: View {
                             WatchWorkoutRow(workout: watch)
                         }
                     }
+
+                    if !recentLoggedDays.isEmpty {
+                        HabitHistorySection(
+                            habits: activeHabits,
+                            entries: entries,
+                            days: recentLoggedDays,
+                            context: context
+                        )
+                    }
                 }
                 .padding(20)
             }
-            .refreshable { await health.refresh() }
+            .refreshable {
+                await health.refresh()
+                await sync.refresh(context: context)
+            }
             .modifier(Screen())
             .navigationTitle("Today")
             .navigationBarTitleDisplayMode(.large)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .sheet(isPresented: $loggingWorkout) { LogWorkoutSheet() }
             .sheet(isPresented: $loggingMeal) { LogMealSheet() }
+            .sheet(item: $editingWorkout) { workout in
+                LogWorkoutSheet(workout: workout)
+            }
+            .sheet(item: $editingMeal) { meal in
+                LogMealSheet(meal: meal)
+            }
         }
     }
 

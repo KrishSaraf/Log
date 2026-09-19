@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { ForkKnifeIcon } from "@phosphor-icons/react/dist/ssr";
 import { desc, eq, sql } from "drizzle-orm";
 
-import { auth } from "@/auth";
 import { FoodPhotoLogger } from "@/components/nutrition/food-photo-logger";
 import {
   EmptyState,
@@ -15,6 +14,7 @@ import {
   PanelTitle,
 } from "@/components/kit";
 import { db, foodEntries, meals } from "@/db";
+import { getDashboardUserId } from "@/lib/auth-user";
 import { formatShortDate, todayIso, toNumber } from "@/lib/format";
 import { safely } from "@/lib/safe-query";
 
@@ -23,9 +23,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Nutrition" };
 
 export default async function NutritionPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
-  const userId = session.user.id;
+  const userId = await getDashboardUserId();
+  if (!userId) redirect("/sign-in");
   const today = todayIso();
 
   const recent = await safely(

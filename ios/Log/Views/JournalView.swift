@@ -3,10 +3,14 @@ import SwiftData
 
 struct JournalView: View {
     @Environment(\.modelContext) private var context
+    @Environment(SyncEngine.self) private var sync
     @Query(sort: \Habit.orderIndex) private var habits: [Habit]
     @Query private var entries: [HabitEntry]
 
     private var day: String { DayStamp.today() }
+    private var historyDays: [String] {
+        Array(Set(entries.map(\.day)).filter { $0 != day }.sorted(by: >).prefix(21))
+    }
 
     var body: some View {
         NavigationStack {
@@ -42,6 +46,7 @@ struct JournalView: View {
                                     day: day,
                                     value: next
                                 )
+                                sync.pushQuietly(context: context)
                             }
                         }
                         .padding(.vertical, 8)
@@ -49,9 +54,22 @@ struct JournalView: View {
                             Rectangle().fill(Palette.line).frame(height: 1)
                         }
                     }
+
+                    if !historyDays.isEmpty {
+                        HabitHistorySection(
+                            habits: habits,
+                            entries: entries,
+                            days: historyDays,
+                            context: context
+                        )
+                    }
+
+                    WebsiteSettingsCard()
+                        .padding(.top, 8)
                 }
                 .padding(20)
             }
+            .refreshable { await sync.refresh(context: context) }
             .modifier(Screen())
             .navigationTitle("Log")
             .navigationBarTitleDisplayMode(.large)

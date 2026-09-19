@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { HeartbeatIcon, PulseIcon, ScalesIcon } from "@phosphor-icons/react/dist/ssr";
 import { count, desc, eq, max, sql } from "drizzle-orm";
 
-import { auth } from "@/auth";
 import { WeightTrend } from "@/components/health/weight-trend";
 import {
   EmptyState,
@@ -16,6 +15,7 @@ import {
   PanelTitle,
 } from "@/components/kit";
 import { db, healthMetrics } from "@/db";
+import { getDashboardUserId } from "@/lib/auth-user";
 import { CHART_HEIGHT } from "@/lib/chart-theme";
 import { formatKg, formatShortDate } from "@/lib/format";
 import { loadHabitsDashboard } from "@/lib/habits";
@@ -30,9 +30,8 @@ const METRIC_LABELS: Record<string, string> = {
 };
 
 export default async function HealthPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
-  const userId = session.user.id;
+  const userId = await getDashboardUserId();
+  if (!userId) redirect("/sign-in");
 
   const [data, coverage] = await Promise.all([
     loadHabitsDashboard(userId),
@@ -53,7 +52,8 @@ export default async function HealthPage() {
     ),
   ]);
 
-  const historyWeights = data.weights.filter((point) => point.date.startsWith("2024"));
+  const historyWeights = data.weights;
+  const listedWeights = [...data.weights].reverse();
 
   return (
     <div className="space-y-8">
@@ -133,6 +133,42 @@ export default async function HealthPage() {
           </PanelBody>
         </Panel>
       </div>
+
+      <Panel>
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Weight readings</PanelTitle>
+            <PanelDescription>
+              {listedWeights.length === 0
+                ? "Every weigh-in"
+                : `${listedWeights.length} readings`}
+            </PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody flush>
+          {listedWeights.length === 0 ? (
+            <EmptyState
+              icon={ScalesIcon}
+              title="No weigh-ins yet"
+              description="Each reading will list here, newest first."
+            />
+          ) : (
+            <ul className="max-h-[36rem] divide-y divide-line overflow-auto">
+              {listedWeights.map((point) => (
+                <li
+                  key={point.date}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5"
+                >
+                  <span className="text-sm text-text">{formatShortDate(point.date)}</span>
+                  <span className="num shrink-0 text-sm text-text-muted">
+                    {formatKg(point.kg)} kg
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

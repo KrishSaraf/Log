@@ -11,25 +11,22 @@ import {
   users,
   verificationTokens,
 } from "@/db/schema";
+import {
+  claimLegacyDataIfNeeded,
+  DEV_DISPLAY_NAME,
+  LEGACY_EMAIL,
+  LEGACY_USER_ID,
+} from "@/lib/legacy-user";
 import { seedDefaultHabitsForUser } from "@/lib/seed-habits";
-
-/** Same id as migrate-multiuser legacy owner — so local login sees imported data. */
-const DEV_USER_ID = "00000000-0000-4000-8000-000000000001";
-const DEV_EMAIL = "legacy@log.local";
-const DEV_NAME = "Krish (local)";
 
 const devLoginEnabled = process.env.AUTH_DEV_LOGIN === "1";
 
 /**
  * Auth.js v5 — Google + Apple (+ optional local test login).
  *
- * Env (see .env.example / docs/AUTH.md):
- *   AUTH_SECRET
- *   AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET
- *   AUTH_APPLE_ID / AUTH_APPLE_SECRET
- *   AUTH_DEV_LOGIN=1          — local one-click sign-in (no OAuth)
- *   NEXT_PUBLIC_AUTH_DEV_LOGIN=1
- *   AUTH_URL (e.g. http://localhost:3001)
+ * Dev login authenticates as the legacy imported-data user so Today /
+ * Workouts / Health show history immediately. A first-time Google/Apple
+ * user gets that history reassigned once (see claimLegacyDataIfNeeded).
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -47,25 +44,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               const existing = await db
                 .select()
                 .from(users)
-                .where(eq(users.id, DEV_USER_ID))
+                .where(eq(users.id, LEGACY_USER_ID))
                 .limit(1);
 
               if (existing[0]) {
                 return {
                   id: existing[0].id,
                   email: existing[0].email,
-                  name: existing[0].name ?? DEV_NAME,
+                  name: existing[0].name ?? DEV_DISPLAY_NAME,
+                };
+              }
+
+              const byEmail = await db
+                .select()
+                .from(users)
+                .where(eq(users.email, LEGACY_EMAIL))
+                .limit(1);
+
+              if (byEmail[0]) {
+                return {
+                  id: byEmail[0].id,
+                  email: byEmail[0].email,
+                  name: byEmail[0].name ?? DEV_DISPLAY_NAME,
                 };
               }
 
               await db.insert(users).values({
-                id: DEV_USER_ID,
-                email: DEV_EMAIL,
-                name: DEV_NAME,
+                id: LEGACY_USER_ID,
+                email: LEGACY_EMAIL,
+                name: DEV_DISPLAY_NAME,
               });
-              await seedDefaultHabitsForUser(DEV_USER_ID);
+              await seedDefaultHabitsForUser(LEGACY_USER_ID);
 
-              return { id: DEV_USER_ID, email: DEV_EMAIL, name: DEV_NAME };
+              return {
+                id: LEGACY_USER_ID,
+                email: LEGACY_EMAIL,
+                name: DEV_DISPLAY_NAME,
+              };
             },
           }),
         ]
@@ -77,10 +92,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
+  callbacks: {
+    ...authConfig.callbacks,
+    jwt({ token, user }) {
+      if (user?.id) {
+        token.sub = user.id;
+        token.id = user.id;
+      }
+      if (user?.email === LEGACY_EMAIL) {
+        token.sub = user.id ?? LEGACY_USER_ID;
+        token.id = token.sub;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) {
+        const id = (typeof token.id === "string" && token.id) || token.sub;
+        if (id) session.user.id = id;
+      }
+      return session;
+    },
+  },
   events: {
     async createUser({ user }) {
+      if (!user.id) return;
+      await claimLegacyDataIfNeeded(user.id);
+      await seedDefaultHabitsForUser(user.id);
+    },
+    async signIn({ user }) {
       if (user.id) {
-        await seedDefaultHabitsForUser(user.id);
+        await claimLegacyDataIfNeeded(user.id);
       }
     },
   },

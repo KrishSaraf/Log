@@ -21,13 +21,13 @@ enum AppSeed {
             for row in habits.responses {
                 let value = normalize(row.value, numeric: row.numeric)
                 guard let value else { continue }
-                context.insert(HabitEntry(key: row.key, day: row.date, value: value))
+                context.insert(HabitEntry(key: row.key, day: row.date, value: value, needsPush: false))
             }
         }
 
         if let weights = load("weights", as: [WeightRow].self) {
             for row in weights {
-                context.insert(WeightSample(day: row.date, kg: row.kg))
+                context.insert(WeightSample(day: row.date, kg: row.kg, needsPush: false))
             }
         }
 
@@ -37,7 +37,8 @@ enum AppSeed {
                 let workout = LoggedWorkout(
                     name: row.name ?? "Session",
                     date: date,
-                    notes: row.notes ?? ""
+                    notes: row.notes ?? "",
+                    needsPush: false
                 )
                 context.insert(workout)
             }

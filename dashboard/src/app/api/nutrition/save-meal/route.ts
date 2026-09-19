@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireUserId(req);
     const body = (await req.json()) as {
       date?: string;
       mealName?: string | null;

@@ -3,13 +3,16 @@ import SwiftData
 
 struct WorkoutsView: View {
     @Environment(HealthKitService.self) private var health
+    @Environment(\.modelContext) private var context
+    @Environment(SyncEngine.self) private var sync
     @Query(sort: \LoggedWorkout.date, order: .reverse) private var logged: [LoggedWorkout]
     @State private var logging = false
+    @State private var editing: LoggedWorkout?
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                LazyVStack(alignment: .leading, spacing: 22) {
                     HStack(spacing: 10) {
                         Button("Log workout") { logging = true }
                             .buttonStyle(BlockButtonStyle())
@@ -28,11 +31,22 @@ struct WorkoutsView: View {
 
                     QuietStat(label: "Sessions", value: "\(logged.count)", unit: "")
 
-                    if !logged.isEmpty {
+                    if logged.isEmpty {
+                        Text("No sessions yet.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(Palette.muted)
+                    } else {
                         VStack(alignment: .leading, spacing: 10) {
                             SectionLabel(text: "YOURS")
                             ForEach(logged) { workout in
-                                LoggedWorkoutRow(workout: workout)
+                                Button { editing = workout } label: {
+                                    LoggedWorkoutRow(workout: workout)
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button("Edit") { editing = workout }
+                                    Button("Delete", role: .destructive) { delete(workout) }
+                                }
                             }
                         }
                     }
@@ -48,13 +62,28 @@ struct WorkoutsView: View {
                 }
                 .padding(20)
             }
-            .refreshable { await health.refresh() }
+            .refreshable {
+                await health.refresh()
+                await sync.refresh(context: context)
+            }
             .modifier(Screen())
             .navigationTitle("Workouts")
             .navigationBarTitleDisplayMode(.large)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .sheet(isPresented: $logging) { LogWorkoutSheet() }
+            .sheet(item: $editing) { workout in
+                LogWorkoutSheet(workout: workout)
+            }
         }
+    }
+
+    private func delete(_ workout: LoggedWorkout) {
+        if let remote = workout.remoteId, !remote.isEmpty {
+            context.insert(SyncTombstone(kind: "workout", remoteId: remote))
+        }
+        context.delete(workout)
+        try? context.save()
+        sync.pushQuietly(context: context)
     }
 }
 

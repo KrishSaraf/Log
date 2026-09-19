@@ -9,7 +9,7 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
-    await requireUserId();
+    await requireUserId(req);
     const body = await readPhotoBody(req);
     const draft = await analyzeMachinePhoto(body);
     return NextResponse.json({ draft });
