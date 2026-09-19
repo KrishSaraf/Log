@@ -5,8 +5,7 @@ import { ExerciseCard } from "@/components/exercises/ExerciseCard";
 import { ExerciseDetailModal } from "@/components/exercises/ExerciseDetailModal";
 import { ExerciseFormModal } from "@/components/exercises/ExerciseFormModal";
 import { useListExercises, useGetExerciseFilters } from "@/hooks/use-exercises";
-import { useDebounce } from "@/hooks/use-debounce"; // Will implement inline
-import { Loader2, ChevronLeft, ChevronRight, Activity } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Activity, Dumbbell } from "lucide-react";
 import type { Exercise } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 
@@ -113,7 +112,7 @@ export default function Home() {
               <p className="text-destructive font-medium text-lg">Failed to load exercises.</p>
               <p className="text-muted-foreground mt-2">The API endpoint might be missing.</p>
             </div>
-          ) : exercisesData?.exercises.length === 0 ? (
+          ) : exercisesData?.exercises?.length === 0 ? (
             <div className="text-center py-32 bg-card rounded-3xl border border-white/5 flex flex-col items-center">
               <Dumbbell className="w-16 h-16 text-white/10 mb-4" />
               <h3 className="text-xl font-display font-bold text-white mb-2">No exercises found</h3>

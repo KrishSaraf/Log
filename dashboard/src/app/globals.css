@@ -1,0 +1,253 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens. The app is dark-locked on purpose: it is a private command
+   center that is read at a glance, often at night. Every value below has a
+   plain-language description in DESIGN.md.
+--------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces, from furthest back to furthest forward. */
+  --bg: #0a0a0b;
+  --surface-sunken: #08080a;
+  --surface: #101012;
+  --surface-raised: #17171a;
+
+  /* Hairlines. Nothing in this app uses a drop shadow to separate regions. */
+  --line: oklch(1 0 0 / 7%);
+  --line-strong: oklch(1 0 0 / 13%);
+
+  /* Text, three steps only. */
+  --text: #ededef;
+  --text-muted: #9a9aa3;
+  --text-faint: #65656e;
+
+  /* The single accent: ember orange, carried over from the Krish Workout app. */
+  --ember: #ff5a1f;
+  --ember-bright: #ff7845;
+  --ember-quiet: oklch(0.69 0.2 38 / 14%);
+  --ember-line: oklch(0.69 0.2 38 / 32%);
+  --on-ember: #14100d;
+
+  /* Direction of travel for a metric. Deliberately muted so they never
+     out-shout the ember accent. */
+  --positive: #5fbf8c;
+  --negative: #e2564b;
+
+  /* Chart series. Ember leads, the rest step away in warmth then temperature. */
+  --chart-1: #ff5a1f;
+  --chart-2: #efa24a;
+  --chart-3: #d9c7a3;
+  --chart-4: #6e8091;
+  --chart-5: #4a4a52;
+  --grid: oklch(1 0 0 / 6%);
+
+  /* Corner radii. Three steps, one rule: controls md, panels lg, page-level
+     surfaces xl, status pills full. */
+  --radius: 0.75rem;
+
+  /* shadcn semantic aliases mapped onto the palette above. */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--text);
+  --primary: var(--ember);
+  --primary-foreground: var(--on-ember);
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-raised);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-raised);
+  --accent-foreground: var(--text);
+  --destructive: var(--negative);
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--ember);
+  --sidebar: var(--surface-sunken);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--ember);
+  --sidebar-primary-foreground: var(--on-ember);
+  --sidebar-accent: var(--surface-raised);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--ember);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-ember: var(--ember);
+  --color-ember-bright: var(--ember-bright);
+  --color-ember-quiet: var(--ember-quiet);
+  --color-ember-line: var(--ember-line);
+  --color-on-ember: var(--on-ember);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-grid: var(--grid);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1rem;
+  --text-micro--letter-spacing: 0.06em;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/60;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* iOS Safari zooms focused inputs under 16px — keep forms readable without the jump. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  @media (min-width: 1024px) {
+    input,
+    select,
+    textarea {
+      font-size: inherit;
+    }
+  }
+
+  /* Numbers are read by shape in this app, so every digit gets equal width. */
+  th,
+  td {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: var(--ember-quiet);
+    color: var(--text);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(1 0 0 / 22%);
+    background-clip: content-box;
+  }
+}
+
+@layer utilities {
+  /* Metric typography: monospaced, tabular, tightened. Use on any figure the
+     eye has to compare against another figure. */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* The small uppercase label used for column and section captions. */
+  .label-caps {
+    font-size: var(--text-micro);
+    line-height: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
