@@ -73,7 +73,6 @@ struct JournalView: View {
             .modifier(Screen())
             .navigationTitle("Log")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
 

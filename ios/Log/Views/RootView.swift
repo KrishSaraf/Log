@@ -6,22 +6,39 @@ struct RootView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @State private var sync = SyncEngine()
+    @State private var loggingPreferences = LoggingPreferences()
 
     var body: some View {
         TabView {
             TodayView()
-                .tabItem { Label("Today", systemImage: "sun.max") }
-            WorkoutsView()
-                .tabItem { Label("Workouts", systemImage: "figure.strengthtraining.traditional") }
-            NutritionView()
-                .tabItem { Label("Food", systemImage: "fork.knife") }
+                .tabItem {
+                    Label("Today", systemImage: "sun.max")
+                }
+
+            if loggingPreferences.workouts {
+                WorkoutsView()
+                    .tabItem {
+                        Label("Workouts", systemImage: "figure.strengthtraining.traditional")
+                    }
+            }
+
+            if loggingPreferences.food {
+                NutritionView()
+                    .tabItem {
+                        Label("Food", systemImage: "fork.knife")
+                    }
+            }
+
             HealthView()
-                .tabItem { Label("Health", systemImage: "heart") }
-            JournalView()
-                .tabItem { Label("Log", systemImage: "checkmark.rectangle") }
+                .tabItem {
+                    Label("Health", systemImage: "heart")
+                }
         }
-        .tint(Palette.rust)
+        .tint(Palette.accent)
+        .toolbarBackground(Palette.bg.opacity(0.92), for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
         .environment(sync)
+        .environment(loggingPreferences)
         .task {
             AppSeed.runIfNeeded(context: context)
             await health.prepare()

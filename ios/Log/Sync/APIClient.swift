@@ -107,6 +107,64 @@ enum APIClient {
         }
         return nil
     }
+
+    static func analyzeFoodPhoto(jpeg: Data, hint: String?) async throws -> Data {
+        try await analyzePhoto(path: "/api/nutrition/analyze-photo", jpeg: jpeg, hint: hint)
+    }
+
+    static func analyzeWorkoutPhoto(jpeg: Data, hint: String?) async throws -> Data {
+        try await analyzePhoto(path: "/api/workouts/analyze-photo", jpeg: jpeg, hint: hint)
+    }
+
+    private static func analyzePhoto(path: String, jpeg: Data, hint: String?) async throws -> Data {
+        guard let url = URL(string: baseURLString + path) else {
+            throw APIError.badURL
+        }
+
+        let boundary = "LogBoundary-\(UUID().uuidString)"
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 60
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("1", forHTTPHeaderField: "X-Log-Dev")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        if !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue(token, forHTTPHeaderField: "X-Log-Token")
+        }
+
+        request.httpBody = multipartJPEG(jpeg: jpeg, hint: hint, filename: "photo.jpg", boundary: boundary)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.unreachable }
+        guard (200..<300).contains(http.statusCode) else {
+            throw APIError.http(http.statusCode)
+        }
+        return data
+    }
+
+    private static func multipartJPEG(jpeg: Data, hint: String?, filename: String, boundary: String) -> Data {
+        var body = Data()
+        func append(_ text: String) {
+            if let chunk = text.data(using: .utf8) { body.append(chunk) }
+        }
+
+        append("--\(boundary)\r\n")
+        append("Content-Disposition: form-data; name=\"image\"; filename=\"\(filename)\"\r\n")
+        append("Content-Type: image/jpeg\r\n\r\n")
+        body.append(jpeg)
+        append("\r\n")
+
+        if let hint, !hint.isEmpty {
+            append("--\(boundary)\r\n")
+            append("Content-Disposition: form-data; name=\"hint\"\r\n\r\n")
+            append("\(hint)\r\n")
+        }
+
+        append("--\(boundary)--\r\n")
+        return body
+    }
 }
 
 enum APIError: Error {

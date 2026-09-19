@@ -14,8 +14,11 @@ struct SectionLabel: View {
     var body: some View {
         Text(text)
             .font(.system(size: 12, weight: .semibold))
-            .tracking(1.1)
+            .tracking(0.8)
+            .textCase(.uppercase)
             .foregroundStyle(Palette.muted)
+            .padding(.bottom, 2)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -26,13 +29,65 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 16, weight: .semibold, design: .serif))
+                .font(.system(size: 16, weight: .semibold))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Palette.rust, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                .foregroundStyle(Palette.ink)
+                .padding(.vertical, 15)
+                .background(Palette.accent, in: RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous))
+                .foregroundStyle(Color.white)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
+    }
+}
+
+struct HeroActionButton: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 30, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 28)
+            .foregroundStyle(Color.white)
+            .background(Palette.accent, in: RoundedRectangle(cornerRadius: Palette.Radius.hero, style: .continuous))
+        }
+        .buttonStyle(PressScaleStyle())
+        .accessibilityLabel(title)
+    }
+}
+
+struct SecondaryActionButton: View {
+    let title: String
+    var systemImage: String? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .foregroundStyle(Palette.ink)
+            .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous)
+                    .stroke(Palette.lineStrong, lineWidth: 1)
+            )
+        }
+        .buttonStyle(PressScaleStyle())
     }
 }
 
@@ -40,39 +95,53 @@ struct DayStrip: View {
     let calories: Double?
     let exercise: Double?
     let stand: Double?
+    var moveGoal: Double = 500
+    var exerciseGoal: Double = 30
+    var standGoal: Double = 12
+
+    @State private var appeared = false
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            stripColumn(title: "Move", value: Formatters.int(calories), unit: "kcal", tint: Palette.move)
-            divider
-            stripColumn(title: "Exercise", value: Formatters.int(exercise), unit: "min", tint: Palette.exercise)
-            divider
-            stripColumn(title: "Stand", value: Formatters.oneDecimal(stand), unit: "hr", tint: Palette.stand)
+        HStack(alignment: .center, spacing: 18) {
+            ActivityRings(
+                move: appeared ? progress(calories, goal: moveGoal) : 0,
+                exercise: appeared ? progress(exercise, goal: exerciseGoal) : 0,
+                stand: appeared ? progress(stand, goal: standGoal) : 0
+            )
+            .frame(width: 104, height: 104)
+            .animation(.easeOut(duration: 0.85), value: appeared)
+
+            VStack(alignment: .leading, spacing: 12) {
+                ringLegend(title: "Move", value: Formatters.int(calories), unit: "kcal", tint: Palette.move)
+                ringLegend(title: "Exercise", value: Formatters.int(exercise), unit: "min", tint: Palette.exercise)
+                ringLegend(title: "Stand", value: Formatters.oneDecimal(stand), unit: "hr", tint: Palette.stand)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.vertical, 18)
-        .padding(.horizontal, 8)
-        .background(Palette.surface)
-        .overlay(Rectangle().stroke(Palette.line, lineWidth: 1))
+        .cardSurface()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+        .onAppear { appeared = true }
     }
 
-    private var divider: some View {
-        Rectangle()
-            .fill(Palette.line)
-            .frame(width: 1, height: 54)
+    private func progress(_ value: Double?, goal: Double) -> Double {
+        guard let value, goal > 0 else { return 0 }
+        return min(max(value / goal, 0), 1)
     }
 
-    private func stripColumn(title: String, value: String, unit: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func ringLegend(title: String, value: String, unit: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
             Text(title)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Palette.muted)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
-                    .font(Palette.number)
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(tint)
-                    .minimumScaleFactor(0.5)
+                    .minimumScaleFactor(0.6)
                     .lineLimit(1)
+                    .contentTransition(.numericText())
                 if value != "—" {
                     Text(unit)
                         .font(.system(size: 12, weight: .medium))
@@ -80,8 +149,10 @@ struct DayStrip: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 10)
+    }
+
+    private var accessibilityText: String {
+        "Move \(Formatters.int(calories)) kilocalories, Exercise \(Formatters.int(exercise)) minutes, Stand \(Formatters.oneDecimal(stand)) hours"
     }
 }
 
@@ -91,23 +162,30 @@ struct QuietStat: View {
     let unit: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(label)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Palette.muted)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(value)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Palette.ink)
+                    .contentTransition(.numericText())
                 if value != "—" {
                     Text(unit)
-                        .font(.system(size: 11))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(Palette.muted)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Palette.Space.cardPad)
+        .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.cardInner + 4, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Palette.Radius.cardInner + 4, style: .continuous)
+                .stroke(Palette.line, lineWidth: 1)
+        )
     }
 }
 
@@ -123,14 +201,12 @@ struct AccessBanner: View {
             Text(message)
                 .font(.system(size: 15))
                 .foregroundStyle(Palette.muted)
+                .fixedSize(horizontal: false, vertical: true)
             if showsButton {
                 PrimaryButton(title: buttonTitle, action: action)
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.surface)
-        .overlay(Rectangle().stroke(Palette.line, lineWidth: 1))
+        .cardSurface()
     }
 
     private var title: String {
@@ -158,6 +234,15 @@ struct AccessBanner: View {
 
     private var showsButton: Bool {
         access == .needed || access == .unknown || access == .denied
+    }
+}
+
+struct ListRowDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(Palette.line)
+            .frame(height: 1)
+            .padding(.leading, Palette.Space.cardPad)
     }
 }
 

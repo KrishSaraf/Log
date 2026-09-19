@@ -376,6 +376,8 @@ final class SyncEngine {
                     "name": meal.name,
                     "calories": meal.calories,
                     "proteinG": meal.proteinG,
+                    "carbsG": meal.carbsG,
+                    "fatG": meal.fatG,
                 ],
             ],
         ]

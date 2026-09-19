@@ -11,13 +11,13 @@ struct WebsiteSettingsCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(text: "WEBSITE")
-            Text("On the same Wi-Fi as your computer, Log can keep this phone and the website in step.")
+            SectionLabel(text: "THIS PHONE")
+            Text("On the same Wi-Fi as your computer, this phone can stay in step with the website.")
                 .font(.system(size: 14))
                 .foregroundStyle(Palette.muted)
 
             field("Website address", text: $address, placeholder: APIClient.detectedWebsite, keyboard: .URL)
-            field("Access code", text: $code, placeholder: "Optional", keyboard: .default)
+            field("Optional code", text: $code, placeholder: "If you use one", keyboard: .default)
 
             if let notice = sync.lastNotice {
                 Text(notice)
@@ -25,7 +25,7 @@ struct WebsiteSettingsCard: View {
                     .foregroundStyle(Palette.muted)
             }
 
-            Button(sync.isUpdating ? "Updating…" : "Update now") {
+            Button(sync.isUpdating ? "Updating…" : "Update") {
                 APIClient.setBaseURL(address)
                 APIClient.setToken(code)
                 Task { await sync.refresh(context: context) }
@@ -55,6 +55,27 @@ struct WebsiteSettingsCard: View {
                         APIClient.setToken(value)
                     }
                 }
+        }
+    }
+}
+
+struct WebsiteSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                WebsiteSettingsCard()
+                    .padding(20)
+            }
+            .modifier(Screen())
+            .navigationTitle("This phone")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
         }
     }
 }

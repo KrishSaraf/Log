@@ -127,19 +127,69 @@ private struct SessionRow: Decodable {
     let notes: String?
 }
 
-struct CatalogExercise: Decodable, Identifiable {
+struct CatalogExercise: Decodable, Identifiable, Hashable {
     let id: String
     let name: String
     let bodyPart: String
     let equipment: String
     let target: String
     let level: String
+    let gifUrl: String?
+    let images: [String]
+    let instructions: [String]
+    let secondaryMuscles: [String]
 
-    static func all() -> [CatalogExercise] {
-        guard let url = AppSeed.bundleJSON("exercises"),
-              let data = try? Data(contentsOf: url),
-              let rows = try? JSONDecoder().decode([CatalogExercise].self, from: data)
-        else { return [] }
-        return rows
+    var photoURLs: [URL] {
+        let raw = images.isEmpty ? [gifUrl].compactMap { $0 } : images
+        return raw.compactMap { value -> URL? in
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return nil }
+            return URL(string: trimmed)
+        }
     }
+
+    var coverURL: URL? { photoURLs.first }
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, bodyPart, equipment, target, level
+        case gifUrl, images, instructions, secondaryMuscles
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        bodyPart = try c.decode(String.self, forKey: .bodyPart)
+        equipment = try c.decode(String.self, forKey: .equipment)
+        target = try c.decode(String.self, forKey: .target)
+        level = try c.decodeIfPresent(String.self, forKey: .level) ?? ""
+        let gif = try c.decodeIfPresent(String.self, forKey: .gifUrl)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        gifUrl = (gif?.isEmpty == false) ? gif : nil
+        images = try c.decodeIfPresent([String].self, forKey: .images) ?? []
+        instructions = try c.decodeIfPresent([String].self, forKey: .instructions) ?? []
+        secondaryMuscles = try c.decodeIfPresent([String].self, forKey: .secondaryMuscles) ?? []
+    }
+
+    private enum Cache {
+        static let all: [CatalogExercise] = {
+            guard let url = AppSeed.bundleJSON("exercises"),
+                  let data = try? Data(contentsOf: url),
+                  let rows = try? JSONDecoder().decode([CatalogExercise].self, from: data)
+            else { return [] }
+            return rows
+        }()
+    }
+
+    static func all() -> [CatalogExercise] { Cache.all }
+
+    static let bodyParts: [String] = {
+        let preferred = [
+            "chest", "back", "shoulders", "upper arms", "lower arms",
+            "waist", "hips", "upper legs", "lower legs", "neck", "cardio",
+        ]
+        let present = Set(all().map(\.bodyPart))
+        return preferred.filter { present.contains($0) } + present.subtracting(preferred).sorted()
+    }()
+
+    static let equipment: [String] = Array(Set(all().map(\.equipment))).sorted()
 }

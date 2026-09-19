@@ -58,6 +58,8 @@ final class MealLog {
     var mealType: String
     var calories: Int
     var proteinG: Int
+    var carbsG: Int = 0
+    var fatG: Int = 0
     var createdAt: Date
     var remoteId: String? = nil
     var needsPush: Bool = false
@@ -70,6 +72,8 @@ final class MealLog {
         mealType: String,
         calories: Int,
         proteinG: Int,
+        carbsG: Int = 0,
+        fatG: Int = 0,
         remoteId: String? = nil,
         needsPush: Bool = true
     ) {
@@ -79,6 +83,8 @@ final class MealLog {
         self.mealType = mealType
         self.calories = calories
         self.proteinG = proteinG
+        self.carbsG = carbsG
+        self.fatG = fatG
         self.createdAt = .now
         self.remoteId = remoteId
         self.needsPush = needsPush

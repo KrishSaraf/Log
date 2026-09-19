@@ -245,7 +245,7 @@ final class HealthKitService {
     }
 
     private func recentWorkouts() async -> [WatchWorkout] {
-        let start = Calendar.current.date(byAdding: .day, value: -30, to: Date())
+        let start = Calendar.current.date(byAdding: .day, value: -90, to: Date())
         let predicate = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
 
@@ -253,7 +253,7 @@ final class HealthKitService {
             let query = HKSampleQuery(
                 sampleType: .workoutType(),
                 predicate: predicate,
-                limit: 40,
+                limit: 80,
                 sortDescriptors: [sort]
             ) { [log] _, samples, error in
                 if let error {
@@ -291,22 +291,101 @@ enum HealthAccess: Equatable {
 private extension HKWorkoutActivityType {
     var displayName: String {
         switch self {
-        case .traditionalStrengthTraining: return "Strength"
-        case .functionalStrengthTraining: return "Functional strength"
-        case .running: return "Run"
-        case .walking: return "Walk"
+        case .americanFootball: return "Football"
+        case .archery: return "Archery"
+        case .australianFootball: return "AFL"
+        case .badminton: return "Badminton"
+        case .baseball: return "Baseball"
+        case .basketball: return "Basketball"
+        case .bowling: return "Bowling"
+        case .boxing: return "Boxing"
+        case .climbing: return "Climbing"
+        case .cricket: return "Cricket"
+        case .crossTraining: return "Cross training"
+        case .curling: return "Curling"
         case .cycling: return "Ride"
-        case .swimming: return "Swim"
-        case .yoga: return "Yoga"
-        case .coreTraining: return "Core"
-        case .highIntensityIntervalTraining: return "HIIT"
+        case .dance: return "Dance"
+        case .danceInspiredTraining: return "Dance"
         case .elliptical: return "Elliptical"
-        case .rowing: return "Row"
+        case .equestrianSports: return "Riding"
+        case .fencing: return "Fencing"
+        case .fishing: return "Fishing"
+        case .functionalStrengthTraining: return "Strength"
+        case .golf: return "Golf"
+        case .gymnastics: return "Gymnastics"
+        case .handball: return "Handball"
         case .hiking: return "Hike"
-        case .cooldown: return "Cooldown"
+        case .hockey: return "Hockey"
+        case .hunting: return "Hunting"
+        case .lacrosse: return "Lacrosse"
+        case .martialArts: return "Martial arts"
+        case .mindAndBody: return "Mind and body"
+        case .mixedMetabolicCardioTraining: return "Cardio"
+        case .paddleSports: return "Paddle"
+        case .play: return "Play"
+        case .preparationAndRecovery: return "Recovery"
+        case .racquetball: return "Racquetball"
+        case .rowing: return "Row"
+        case .rugby: return "Rugby"
+        case .running: return "Run"
+        case .sailing: return "Sailing"
+        case .skatingSports: return "Skate"
+        case .snowSports: return "Snow"
+        case .soccer: return "Soccer"
+        case .softball: return "Softball"
+        case .squash: return "Squash"
+        case .stairClimbing: return "Stairs"
+        case .surfingSports: return "Surf"
+        case .swimming: return "Swim"
+        case .tableTennis: return "Table tennis"
+        case .tennis: return "Tennis"
+        case .trackAndField: return "Track"
+        case .traditionalStrengthTraining: return "Strength"
+        case .volleyball: return "Volleyball"
+        case .walking: return "Walk"
+        case .waterFitness: return "Water fitness"
+        case .waterPolo: return "Water polo"
+        case .waterSports: return "Water sports"
+        case .wrestling: return "Wrestling"
+        case .yoga: return "Yoga"
+        case .barre: return "Barre"
+        case .coreTraining: return "Core"
+        case .crossCountrySkiing: return "XC ski"
+        case .downhillSkiing: return "Ski"
         case .flexibility: return "Mobility"
+        case .highIntensityIntervalTraining: return "HIIT"
+        case .jumpRope: return "Jump rope"
+        case .kickboxing: return "Kickboxing"
+        case .pilates: return "Pilates"
+        case .snowboarding: return "Snowboard"
+        case .stairs: return "Stairs"
+        case .stepTraining: return "Steps"
+        case .wheelchairWalkPace: return "Walk"
+        case .wheelchairRunPace: return "Run"
+        case .taiChi: return "Tai chi"
         case .mixedCardio: return "Cardio"
+        case .handCycling: return "Handcycle"
+        case .discSports: return "Disc sports"
+        case .fitnessGaming: return "Fitness gaming"
+        case .cardioDance: return "Dance"
+        case .socialDance: return "Dance"
+        case .pickleball: return "Pickleball"
+        case .cooldown: return "Cooldown"
+        case .swimBikeRun: return "Triathlon"
+        case .transition: return "Transition"
+        case .underwaterDiving: return "Dive"
         case .other: return "Workout"
+        default: return Self.fallbackName(rawValue)
+        }
+    }
+
+    static func fallbackName(_ rawValue: UInt) -> String {
+        switch rawValue {
+        case 10: return "Cricket"
+        case 20: return "Strength"
+        case 37: return "Run"
+        case 48: return "Tennis"
+        case 50: return "Strength"
         default: return "Workout"
         }
     }
