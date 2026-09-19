@@ -1,8 +1,10 @@
 import SwiftUI
+import SwiftData
 import UIKit
 
 struct HealthView: View {
     @Environment(HealthKitService.self) private var health
+    @Query(sort: \WeightSample.day, order: .reverse) private var weights: [WeightSample]
 
     var body: some View {
         NavigationStack {
@@ -16,11 +18,33 @@ struct HealthView: View {
                             exercise: health.snapshot.exerciseMinutes,
                             stand: health.snapshot.standHours
                         )
-                        stat("Weight", Formatters.oneDecimal(health.snapshot.weightKg), "kg")
-                        stat("Heart rate today", Formatters.int(health.snapshot.averageHeartRate), "bpm avg")
-                        stat("Resting heart rate", Formatters.int(health.snapshot.restingHeartRate), "bpm")
-                        stat("Sleep last night", Formatters.oneDecimal(health.snapshot.sleepHours), "hr")
                         stat("Steps today", Formatters.int(health.snapshot.steps), "")
+                        stat("Sleep last night", Formatters.oneDecimal(health.snapshot.sleepHours), "hr")
+                        stat("Resting heart rate", Formatters.int(health.snapshot.restingHeartRate), "bpm")
+                        stat("Heart rate today", Formatters.int(health.snapshot.averageHeartRate), "bpm avg")
+                    }
+
+                    let latest = weights.first?.kg ?? health.snapshot.weightKg
+                    stat("Weight", Formatters.oneDecimal(latest), "kg")
+
+                    if weights.count > 1 {
+                        SectionLabel(text: "WEIGHT HISTORY")
+                        ForEach(weights.prefix(30), id: \.day) { sample in
+                            HStack {
+                                Text(DayStamp.pretty(sample.day))
+                                    .font(.system(size: 15, design: .serif))
+                                    .foregroundStyle(Palette.ink)
+                                Spacer()
+                                Text("\(Formatters.oneDecimal(sample.kg)) kg")
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .monospacedDigit()
+                                    .foregroundStyle(Palette.ink)
+                            }
+                            .padding(.vertical, 8)
+                            .overlay(alignment: .bottom) {
+                                Rectangle().fill(Palette.line).frame(height: 1)
+                            }
+                        }
                     }
                 }
                 .padding(20)

@@ -12,6 +12,14 @@ struct LogApp: App {
                 .preferredColorScheme(.dark)
                 .tint(Palette.rust)
         }
-        .modelContainer(for: [LoggedWorkout.self, LoggedExercise.self, LoggedSet.self])
+        .modelContainer(for: [
+            LoggedWorkout.self,
+            LoggedExercise.self,
+            LoggedSet.self,
+            Habit.self,
+            HabitEntry.self,
+            WeightSample.self,
+            MealLog.self,
+        ])
     }
 }

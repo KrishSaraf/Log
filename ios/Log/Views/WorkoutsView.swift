@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UIKit
 
 struct WorkoutsView: View {
     @Environment(HealthKitService.self) private var health
@@ -11,20 +10,23 @@ struct WorkoutsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    PrimaryButton(title: "Log workout") {
-                        logging = true
-                    }
-
-                    if logged.isEmpty && health.snapshot.workouts.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Nothing logged")
-                                .font(Palette.title)
+                    HStack(spacing: 10) {
+                        Button("Log workout") { logging = true }
+                            .buttonStyle(BlockButtonStyle())
+                        NavigationLink {
+                            LibraryView()
+                        } label: {
+                            Text("Library")
+                                .font(.system(size: 15, weight: .semibold, design: .serif))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
                                 .foregroundStyle(Palette.ink)
-                            Text("Save a session here. Watch workouts appear underneath once they sync.")
-                                .font(.system(size: 15))
-                                .foregroundStyle(Palette.muted)
+                                .background(Palette.surface)
+                                .overlay(Rectangle().stroke(Palette.line, lineWidth: 1))
                         }
                     }
+
+                    QuietStat(label: "Sessions", value: "\(logged.count)", unit: "")
 
                     if !logged.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
@@ -51,9 +53,7 @@ struct WorkoutsView: View {
             .navigationTitle("Workouts")
             .navigationBarTitleDisplayMode(.large)
             .toolbarColorScheme(.dark, for: .navigationBar)
-            .sheet(isPresented: $logging) {
-                LogWorkoutSheet()
-            }
+            .sheet(isPresented: $logging) { LogWorkoutSheet() }
         }
     }
 }

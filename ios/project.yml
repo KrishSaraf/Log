@@ -16,6 +16,11 @@ targets:
     platform: iOS
     sources:
       - path: Log
+        excludes:
+          - "Resources/*.json"
+      - path: Log/Resources
+        type: folder
+        buildPhase: resources
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.krishsaraf.log
       PRODUCT_NAME: Log
