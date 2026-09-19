@@ -20,53 +20,28 @@ struct WorkoutsView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: Palette.Space.section) {
-                    HeroActionButton(title: "Photograph a machine", systemImage: "camera.fill") {
-                        Task { await openCamera() }
-                    }
-
                     HStack(spacing: 10) {
+                        Button("Photograph") { Task { await PhotoIntake.openCamera(showCamera: $showCamera, showLibrary: $showLibrary) } }
+                            .buttonStyle(BlockButtonStyle(filled: true))
                         Button("Log workout") { logging = true }
                             .buttonStyle(BlockButtonStyle(filled: false))
-                        NavigationLink {
-                            LibraryView()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "square.grid.2x2")
-                                    .font(.system(size: 13, weight: .semibold))
-                                Text("Library")
-                                    .font(.system(size: 15, weight: .semibold))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(minHeight: 48)
-                            .foregroundStyle(Palette.ink)
-                            .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous)
-                                    .stroke(Palette.lineStrong, lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(PressScaleStyle())
+                    }
+                    NavigationLink {
+                        LibraryView()
+                    } label: {
+                        Text("Exercise library")
+                            .font(.system(size: 15, weight: .semibold))
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .foregroundStyle(Palette.muted)
                     }
 
-                    QuietStat(label: "Gym log", value: "\(logged.count)", unit: "sessions")
-
                     if !health.snapshot.workouts.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            SectionLabel(text: "Watch")
-                            VStack(spacing: 0) {
-                                ForEach(Array(health.snapshot.workouts.enumerated()), id: \.element.id) { index, workout in
-                                    WatchWorkoutRow(workout: workout)
-                                        .padding(.horizontal, Palette.Space.cardPad)
-                                    if index < health.snapshot.workouts.count - 1 {
-                                        ListRowDivider()
-                                    }
-                                }
+                        GroupedCard(title: "Watch") {
+                            ForEach(Array(health.snapshot.workouts.enumerated()), id: \.element.id) { index, workout in
+                                WatchWorkoutRow(workout: workout)
+                                    .padding(.horizontal, Palette.Space.cardPad)
+                                if index < health.snapshot.workouts.count - 1 { ListRowDivider() }
                             }
-                            .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous)
-                                    .stroke(Palette.line, lineWidth: 1)
-                            )
                         }
                     }
 
@@ -76,34 +51,23 @@ struct WorkoutsView: View {
                             .foregroundStyle(Palette.muted)
                             .cardSurface()
                     } else {
-                        VStack(alignment: .leading, spacing: 10) {
-                            SectionLabel(text: "Yours")
-                            VStack(spacing: 0) {
-                                ForEach(Array(logged.enumerated()), id: \.element.id) { index, workout in
-                                    Button { editing = workout } label: {
-                                        LoggedWorkoutRow(workout: workout)
-                                            .padding(.horizontal, Palette.Space.cardPad)
-                                    }
-                                    .buttonStyle(PressScaleStyle())
-                                    .contextMenu {
-                                        Button("Edit") { editing = workout }
-                                        Button("Delete", role: .destructive) { delete(workout) }
-                                    }
-                                    if index < logged.count - 1 {
-                                        ListRowDivider()
-                                    }
+                        GroupedCard(title: "Yours") {
+                            ForEach(Array(logged.enumerated()), id: \.element.id) { index, workout in
+                                Button { editing = workout } label: {
+                                    LoggedWorkoutRow(workout: workout)
+                                        .padding(.horizontal, Palette.Space.cardPad)
                                 }
+                                .buttonStyle(PressScaleStyle())
+                                .contextMenu {
+                                    Button("Edit") { editing = workout }
+                                    Button("Delete", role: .destructive) { delete(workout) }
+                                }
+                                if index < logged.count - 1 { ListRowDivider() }
                             }
-                            .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous)
-                                    .stroke(Palette.line, lineWidth: 1)
-                            )
                         }
                     }
                 }
                 .padding(Palette.Space.screen)
-                .padding(.bottom, 12)
             }
             .refreshable {
                 await health.refresh()
@@ -111,32 +75,16 @@ struct WorkoutsView: View {
             }
             .modifier(Screen())
             .navigationTitle("Workouts")
-            .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $logging) { LogWorkoutSheet() }
-            .sheet(item: $editing) { workout in
-                LogWorkoutSheet(workout: workout)
-            }
-            .fullScreenCover(isPresented: $showCamera, onDismiss: {
-                if pendingJPEG != nil { showPhotoSheet = true }
-            }) {
-                CameraPicker(
-                    onImage: { image in
-                        if let jpeg = MealPhotoJPEG.make(from: image),
-                           let preview = UIImage(data: jpeg)
-                        {
-                            pendingJPEG = jpeg
-                            pendingImage = preview
-                        }
-                        showCamera = false
-                    },
-                    onCancel: { showCamera = false }
-                )
-                .ignoresSafeArea()
-            }
-            .photosPicker(isPresented: $showLibrary, selection: $photoItem, matching: .images)
-            .onChange(of: photoItem) { _, item in
-                Task { await loadPickedPhoto(item) }
-            }
+            .sheet(item: $editing) { LogWorkoutSheet(workout: $0) }
+            .photoIntake(
+                showCamera: $showCamera,
+                showLibrary: $showLibrary,
+                item: $photoItem,
+                jpeg: $pendingJPEG,
+                preview: $pendingImage,
+                showReview: $showPhotoSheet
+            )
             .sheet(isPresented: $showPhotoSheet, onDismiss: {
                 pendingJPEG = nil
                 pendingImage = nil
@@ -155,30 +103,6 @@ struct WorkoutsView: View {
         context.delete(workout)
         try? context.save()
         sync.pushQuietly(context: context)
-    }
-
-    private func openCamera() async {
-        if await CameraAccess.request() {
-            showCamera = true
-        } else {
-            showLibrary = true
-        }
-    }
-
-    private func loadPickedPhoto(_ item: PhotosPickerItem?) async {
-        guard let item else { return }
-        photoItem = nil
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let jpeg = MealPhotoJPEG.make(from: data),
-                  let preview = UIImage(data: jpeg)
-            else { return }
-            pendingJPEG = jpeg
-            pendingImage = preview
-            showPhotoSheet = true
-        } catch {
-            return
-        }
     }
 }
 

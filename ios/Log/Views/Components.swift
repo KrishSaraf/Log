@@ -10,14 +10,10 @@ struct Screen: ViewModifier {
 
 struct SectionLabel: View {
     let text: String
-
     var body: some View {
         Text(text)
-            .font(.system(size: 12, weight: .semibold))
-            .tracking(0.8)
-            .textCase(.uppercase)
+            .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(Palette.muted)
-            .padding(.bottom, 2)
             .accessibilityAddTraits(.isHeader)
     }
 }
@@ -32,62 +28,81 @@ struct PrimaryButton: View {
                 .font(.system(size: 16, weight: .semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
-                .background(Palette.accent, in: RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous))
-                .foregroundStyle(Color.white)
+                .background(Palette.accent, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .foregroundStyle(Palette.onAccent)
         }
         .buttonStyle(PressScaleStyle())
     }
 }
 
-struct HeroActionButton: View {
-    let title: String
-    let systemImage: String
-    let action: () -> Void
+struct BlockButtonStyle: ButtonStyle {
+    var filled = true
 
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 30, weight: .medium))
-                    .symbolRenderingMode(.hierarchical)
-                Text(title)
-                    .font(.system(size: 17, weight: .semibold))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 28)
-            .foregroundStyle(Color.white)
-            .background(Palette.accent, in: RoundedRectangle(cornerRadius: Palette.Radius.hero, style: .continuous))
-        }
-        .buttonStyle(PressScaleStyle())
-        .accessibilityLabel(title)
-    }
-}
-
-struct SecondaryActionButton: View {
-    let title: String
-    var systemImage: String? = nil
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let systemImage {
-                    Image(systemName: systemImage)
-                        .font(.system(size: 14, weight: .semibold))
-                }
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .foregroundStyle(Palette.ink)
-            .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Palette.Radius.control, style: .continuous)
-                    .stroke(Palette.lineStrong, lineWidth: 1)
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 15, weight: .semibold))
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .foregroundStyle(filled ? Palette.onAccent : Palette.ink)
+            .background(
+                filled ? Palette.accent : Palette.surface,
+                in: Capsule()
             )
+            .overlay(Capsule().stroke(filled ? Color.clear : Palette.lineStrong, lineWidth: 1))
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeOut(duration: 0.14), value: configuration.isPressed)
+    }
+}
+
+struct WeekStrip: View {
+    @Binding var selected: String
+
+    private var days: [(stamp: String, date: Date)] {
+        (0..<7).compactMap { offset in
+            guard let date = Calendar.current.date(byAdding: .day, value: offset - 6, to: Date()) else { return nil }
+            return (DayStamp.from(date), date)
         }
-        .buttonStyle(PressScaleStyle())
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(days, id: \.stamp) { item in
+                let on = item.stamp == selected
+                Button {
+                    selected = item.stamp
+                } label: {
+                    VStack(spacing: 6) {
+                        Text(item.date.formatted(.dateTime.weekday(.narrow)))
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(on ? Palette.ink : Palette.muted)
+                        Text(item.date.formatted(.dateTime.day()))
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(on ? Palette.ink : Palette.muted)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(on ? Palette.surface : Color.clear, in: Capsule())
+                }
+                .buttonStyle(PressScaleStyle())
+                .accessibilityLabel(item.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(Palette.bg)
+    }
+}
+
+struct GroupedCard<Content: View>: View {
+    var title: String? = nil
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let title { SectionLabel(text: title) }
+            VStack(spacing: 0) { content }
+                .groupedFill()
+        }
     }
 }
 
@@ -98,61 +113,50 @@ struct DayStrip: View {
     var moveGoal: Double = 500
     var exerciseGoal: Double = 30
     var standGoal: Double = 12
-
     @State private var appeared = false
 
     var body: some View {
         HStack(alignment: .center, spacing: 18) {
             ActivityRings(
-                move: appeared ? progress(calories, goal: moveGoal) : 0,
-                exercise: appeared ? progress(exercise, goal: exerciseGoal) : 0,
-                stand: appeared ? progress(stand, goal: standGoal) : 0
+                move: appeared ? ratio(calories, moveGoal) : 0,
+                exercise: appeared ? ratio(exercise, exerciseGoal) : 0,
+                stand: appeared ? ratio(stand, standGoal) : 0
             )
-            .frame(width: 104, height: 104)
-            .animation(.easeOut(duration: 0.85), value: appeared)
+            .frame(width: 96, height: 96)
+            .animation(.easeOut(duration: 0.8), value: appeared)
 
-            VStack(alignment: .leading, spacing: 12) {
-                ringLegend(title: "Move", value: Formatters.int(calories), unit: "kcal", tint: Palette.move)
-                ringLegend(title: "Exercise", value: Formatters.int(exercise), unit: "min", tint: Palette.exercise)
-                ringLegend(title: "Stand", value: Formatters.oneDecimal(stand), unit: "hr", tint: Palette.stand)
+            VStack(alignment: .leading, spacing: 10) {
+                legend("Move", Formatters.int(calories), "kcal", Palette.move)
+                legend("Exercise", Formatters.int(exercise), "min", Palette.exercise)
+                legend("Stand", Formatters.oneDecimal(stand), "hr", Palette.stand)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .cardSurface()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityText)
+        .accessibilityLabel("Move \(Formatters.int(calories)) kilocalories, Exercise \(Formatters.int(exercise)) minutes, Stand \(Formatters.oneDecimal(stand)) hours")
         .onAppear { appeared = true }
     }
 
-    private func progress(_ value: Double?, goal: Double) -> Double {
+    private func ratio(_ value: Double?, _ goal: Double) -> Double {
         guard let value, goal > 0 else { return 0 }
         return min(max(value / goal, 0), 1)
     }
 
-    private func ringLegend(title: String, value: String, unit: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+    private func legend(_ title: String, _ value: String, _ unit: String, _ tint: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(title)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Palette.muted)
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(value)
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(tint)
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                    .contentTransition(.numericText())
-                if value != "—" {
-                    Text(unit)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Palette.muted)
-                }
+                .frame(width: 64, alignment: .leading)
+            Text(value)
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(tint)
+            if value != "—" {
+                Text(unit).font(.system(size: 12)).foregroundStyle(Palette.muted)
             }
         }
-    }
-
-    private var accessibilityText: String {
-        "Move \(Formatters.int(calories)) kilocalories, Exercise \(Formatters.int(exercise)) minutes, Stand \(Formatters.oneDecimal(stand)) hours"
     }
 }
 
@@ -162,7 +166,7 @@ struct QuietStat: View {
     let unit: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Palette.muted)
@@ -171,21 +175,13 @@ struct QuietStat: View {
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Palette.ink)
-                    .contentTransition(.numericText())
                 if value != "—" {
-                    Text(unit)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Palette.muted)
+                    Text(unit).font(.system(size: 12)).foregroundStyle(Palette.muted)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Palette.Space.cardPad)
-        .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.cardInner + 4, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Palette.Radius.cardInner + 4, style: .continuous)
-                .stroke(Palette.line, lineWidth: 1)
-        )
+        .cardSurface()
     }
 }
 
@@ -195,15 +191,10 @@ struct AccessBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(Palette.title)
-                .foregroundStyle(Palette.ink)
-            Text(message)
-                .font(.system(size: 15))
-                .foregroundStyle(Palette.muted)
-                .fixedSize(horizontal: false, vertical: true)
-            if showsButton {
-                PrimaryButton(title: buttonTitle, action: action)
+            Text(title).font(Palette.title).foregroundStyle(Palette.ink)
+            Text(message).font(.system(size: 15)).foregroundStyle(Palette.muted)
+            if access == .needed || access == .unknown || access == .denied {
+                PrimaryButton(title: access == .denied ? "Open Settings" : "Continue", action: action)
             }
         }
         .cardSurface()
@@ -219,30 +210,16 @@ struct AccessBanner: View {
 
     private var message: String {
         switch access {
-        case .unavailable:
-            return "Log needs the iPhone that is paired with your Watch."
-        case .denied:
-            return "Turn on the categories you want in Settings → Health → Data Access & Devices → Log."
-        default:
-            return "Allow activity, workouts, sleep, and heart rate."
+        case .unavailable: return "Log needs the iPhone that is paired with your Watch."
+        case .denied: return "Turn on the categories you want in Settings → Health → Data Access & Devices → Log."
+        default: return "Allow activity, workouts, sleep, and heart rate."
         }
-    }
-
-    private var buttonTitle: String {
-        access == .denied ? "Open Settings" : "Continue"
-    }
-
-    private var showsButton: Bool {
-        access == .needed || access == .unknown || access == .denied
     }
 }
 
 struct ListRowDivider: View {
     var body: some View {
-        Rectangle()
-            .fill(Palette.line)
-            .frame(height: 1)
-            .padding(.leading, Palette.Space.cardPad)
+        Rectangle().fill(Palette.line).frame(height: 1).padding(.leading, Palette.Space.cardPad)
     }
 }
 

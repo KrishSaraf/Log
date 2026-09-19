@@ -145,4 +145,10 @@ enum DayStamp {
             return from(date)
         }
     }
+
+    static func shift(_ day: String, by days: Int) -> String? {
+        guard let date = date(from: day) else { return nil }
+        guard let next = Calendar.current.date(byAdding: .day, value: days, to: date) else { return nil }
+        return from(next)
+    }
 }

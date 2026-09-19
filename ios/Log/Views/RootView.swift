@@ -35,7 +35,7 @@ struct RootView: View {
                 }
         }
         .tint(Palette.accent)
-        .toolbarBackground(Palette.bg.opacity(0.92), for: .tabBar)
+        .toolbarBackground(Palette.bg.opacity(0.94), for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
         .environment(sync)
         .environment(loggingPreferences)

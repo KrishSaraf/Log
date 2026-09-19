@@ -12,12 +12,12 @@
 		16C3E73DE3A849248D253E87 /* WorkoutLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C725F87A95981B1D6764A5C /* WorkoutLog.swift */; };
 		190230ED580AC0485B237429 /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 473130274AEB934B1299B41B /* HealthView.swift */; };
 		1BAA898487649BE2A7BEAE13 /* workouts.json in Resources */ = {isa = PBXBuildFile; fileRef = 1FDBE2429E0D4ED9D31C43DE /* workouts.json */; };
-		24DE32209DBBDDA4C5001C44 /* HabitHistorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B201F36010172D75015968 /* HabitHistorySection.swift */; };
 		263E4F3BE6A2E192265E6981 /* WeightChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4172D2E3BA917430226C8D59 /* WeightChart.swift */; };
 		28053341058515E130BAE7DC /* WorkoutReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51567D1B07C2943DB2C87B0F /* WorkoutReviewSheet.swift */; };
 		2B222A76B84C1A321BE078A5 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B51742113955CA994C984AB /* LibraryView.swift */; };
 		2FF964F5B749EC252D32AC8E /* TickControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A1CFBE4A2136F537B4EC3A /* TickControl.swift */; };
-		3AC5BB426E959E4349B7D8A6 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CF910480BF404A82508F82 /* JournalView.swift */; };
+		6A2F9C81D4E07B3A5C8D1E44 /* HabitTiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C1A049B82F6D5E3A90C217 /* HabitTiles.swift */; };
+		9D3B7E21A84C5F6B0E1D2A93 /* HabitColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C8E1A92F3B64D7A91C2E5F0 /* HabitColor.swift */; };
 		4ADD942EC6354B19E10CA064 /* weights.json in Resources */ = {isa = PBXBuildFile; fileRef = F671BD64173B25B3ED08267A /* weights.json */; };
 		4E854FABCB063AFF0D8C3BC4 /* habits.json in Resources */ = {isa = PBXBuildFile; fileRef = A20A693F5D620BFF0E37D4F6 /* habits.json */; };
 		548CB1A85C187141CF69D740 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD93A0DD6E2A514176786B0 /* Components.swift */; };
@@ -52,7 +52,8 @@
 		07E0932DA8D219ACAC7FBD2A /* AppSeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSeed.swift; sourceTree = "<group>"; };
 		0DB39A3DA4C7A4ED3B7392F5 /* ExercisePhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePhoto.swift; sourceTree = "<group>"; };
 		11A1CFBE4A2136F537B4EC3A /* TickControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickControl.swift; sourceTree = "<group>"; };
-		12B201F36010172D75015968 /* HabitHistorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitHistorySection.swift; sourceTree = "<group>"; };
+		4C8E1A92F3B64D7A91C2E5F0 /* HabitColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitColor.swift; sourceTree = "<group>"; };
+		E7C1A049B82F6D5E3A90C217 /* HabitTiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTiles.swift; sourceTree = "<group>"; };
 		169E9AD44B0E087E28589814 /* TrackingSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingSettingsView.swift; sourceTree = "<group>"; };
 		1A015C2597FCA0B6CA2D8526 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		1FA85610519D85ABDF24CE62 /* HealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSnapshot.swift; sourceTree = "<group>"; };
@@ -63,7 +64,6 @@
 		4172D2E3BA917430226C8D59 /* WeightChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightChart.swift; sourceTree = "<group>"; };
 		473130274AEB934B1299B41B /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
 		51567D1B07C2943DB2C87B0F /* WorkoutReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutReviewSheet.swift; sourceTree = "<group>"; };
-		54CF910480BF404A82508F82 /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
 		5849654130C779CC299FB146 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		683ADE330E5D6177F05A16E5 /* LogWeightSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWeightSheet.swift; sourceTree = "<group>"; };
 		69B99559CC8F124D82091D31 /* ActivityRings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityRings.swift; sourceTree = "<group>"; };
@@ -129,6 +129,7 @@
 		4D3374056E2D23CDCD70AE82 /* Theme */ = {
 			isa = PBXGroup;
 			children = (
+				4C8E1A92F3B64D7A91C2E5F0 /* HabitColor.swift */,
 				831615F535115E288E6F1058 /* Palette.swift */,
 			);
 			path = Theme;
@@ -149,9 +150,8 @@
 				3DD93A0DD6E2A514176786B0 /* Components.swift */,
 				1FA9C17A0D0FD3406426354B /* ExerciseDetailView.swift */,
 				0DB39A3DA4C7A4ED3B7392F5 /* ExercisePhoto.swift */,
-				12B201F36010172D75015968 /* HabitHistorySection.swift */,
+				E7C1A049B82F6D5E3A90C217 /* HabitTiles.swift */,
 				473130274AEB934B1299B41B /* HealthView.swift */,
-				54CF910480BF404A82508F82 /* JournalView.swift */,
 				8B51742113955CA994C984AB /* LibraryView.swift */,
 				683ADE330E5D6177F05A16E5 /* LogWeightSheet.swift */,
 				2BE2F6FE1362C0A6D3BFB4B8 /* LogWorkoutSheet.swift */,
@@ -285,11 +285,11 @@
 				55BFA601EDE5CE9811EF2387 /* ExerciseDetailView.swift in Sources */,
 				C9EDBCCC2357E8DDDE4A7303 /* ExercisePhoto.swift in Sources */,
 				93D4A3B67BDE9C408224F713 /* HabitActions.swift in Sources */,
-				24DE32209DBBDDA4C5001C44 /* HabitHistorySection.swift in Sources */,
+				9D3B7E21A84C5F6B0E1D2A93 /* HabitColor.swift in Sources */,
+				6A2F9C81D4E07B3A5C8D1E44 /* HabitTiles.swift in Sources */,
 				BE6A57A3B1214032596FFFB2 /* HealthKitService.swift in Sources */,
 				B67BB6F33C1422EF6DA042DB /* HealthSnapshot.swift in Sources */,
 				190230ED580AC0485B237429 /* HealthView.swift in Sources */,
-				3AC5BB426E959E4349B7D8A6 /* JournalView.swift in Sources */,
 				2B222A76B84C1A321BE078A5 /* LibraryView.swift in Sources */,
 				B6B08E7F26523EC7938CA238 /* LogApp.swift in Sources */,
 				5F5D757E8D42BE59A04E35F9 /* LogWeightSheet.swift in Sources */,

@@ -41,12 +41,10 @@ struct TrackingSettingsView: View {
                             ListRowDivider()
                             row("Activity rings", isOn: $prefs.activity)
                         }
-                        .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous)
-                                .stroke(Palette.line, lineWidth: 1)
-                        )
+                        .groupedFill()
                     }
+
+                    WebsiteSettingsCard()
                 }
                 .padding(Palette.Space.screen)
             }

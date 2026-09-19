@@ -1,4 +1,5 @@
 import AVFoundation
+import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -94,6 +95,82 @@ struct CameraPicker: UIViewControllerRepresentable {
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             onCancel()
+        }
+    }
+}
+
+extension View {
+    func photoIntake(
+        showCamera: Binding<Bool>,
+        showLibrary: Binding<Bool>,
+        item: Binding<PhotosPickerItem?>,
+        jpeg: Binding<Data?>,
+        preview: Binding<UIImage?>,
+        showReview: Binding<Bool>
+    ) -> some View {
+        modifier(
+            PhotoIntakeModifier(
+                showCamera: showCamera,
+                showLibrary: showLibrary,
+                item: item,
+                jpeg: jpeg,
+                preview: preview,
+                showReview: showReview
+            )
+        )
+    }
+}
+
+private struct PhotoIntakeModifier: ViewModifier {
+    @Binding var showCamera: Bool
+    @Binding var showLibrary: Bool
+    @Binding var item: PhotosPickerItem?
+    @Binding var jpeg: Data?
+    @Binding var preview: UIImage?
+    @Binding var showReview: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .fullScreenCover(isPresented: $showCamera, onDismiss: {
+                if jpeg != nil { showReview = true }
+            }) {
+                CameraPicker(
+                    onImage: { image in
+                        if let data = MealPhotoJPEG.make(from: image), let ui = UIImage(data: data) {
+                            jpeg = data
+                            preview = ui
+                        }
+                        showCamera = false
+                    },
+                    onCancel: { showCamera = false }
+                )
+                .ignoresSafeArea()
+            }
+            .photosPicker(isPresented: $showLibrary, selection: $item, matching: .images)
+            .onChange(of: item) { _, picked in
+                Task { await load(picked) }
+            }
+    }
+
+    private func load(_ picked: PhotosPickerItem?) async {
+        guard let picked else { return }
+        item = nil
+        guard let data = try? await picked.loadTransferable(type: Data.self),
+              let made = MealPhotoJPEG.make(from: data),
+              let ui = UIImage(data: made)
+        else { return }
+        jpeg = made
+        preview = ui
+        showReview = true
+    }
+}
+
+enum PhotoIntake {
+    static func openCamera(showCamera: Binding<Bool>, showLibrary: Binding<Bool>) async {
+        if await CameraAccess.request() {
+            showCamera.wrappedValue = true
+        } else {
+            showLibrary.wrappedValue = true
         }
     }
 }

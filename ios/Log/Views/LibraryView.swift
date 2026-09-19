@@ -93,7 +93,7 @@ private struct FilterChip: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 13, weight: selected ? .semibold : .medium))
-                .foregroundStyle(selected ? Color.white : Palette.ink)
+                .foregroundStyle(selected ? Palette.onAccent : Palette.ink)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
                 .background(

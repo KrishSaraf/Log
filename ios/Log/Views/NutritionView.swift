@@ -16,147 +16,72 @@ struct NutritionView: View {
     @State private var loggingManual = false
     @State private var editing: MealLog?
 
-    private var day: String { DayStamp.today() }
-    private var today: [MealLog] { meals.filter { $0.day == day } }
+    private var today: [MealLog] { meals.filter { $0.day == DayStamp.today() } }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Palette.Space.section) {
-                    HStack(alignment: .top, spacing: 10) {
-                        QuietStat(
-                            label: "Calories today",
-                            value: today.isEmpty ? "—" : "\(today.reduce(0) { $0 + $1.calories })",
-                            unit: "kcal"
-                        )
-                        QuietStat(
-                            label: "Protein",
-                            value: today.isEmpty ? "—" : "\(today.reduce(0) { $0 + $1.proteinG })",
-                            unit: "g"
-                        )
+                    HStack(spacing: 10) {
+                        QuietStat(label: "Calories", value: today.isEmpty ? "—" : "\(today.reduce(0) { $0 + $1.calories })", unit: "kcal")
+                        QuietStat(label: "Protein", value: today.isEmpty ? "—" : "\(today.reduce(0) { $0 + $1.proteinG })", unit: "g")
                     }
 
-                    VStack(spacing: 10) {
-                        HeroActionButton(title: "Photograph a meal", systemImage: "camera.fill") {
-                            Task { await openCamera() }
-                        }
-
-                        SecondaryActionButton(title: "Choose from library", systemImage: "photo") {
-                            showLibrary = true
-                        }
-
-                        Button("Log without a photo") {
-                            pendingJPEG = nil
-                            pendingImage = nil
-                            loggingManual = true
-                        }
+                    HStack(spacing: 10) {
+                        Button("Photograph") { Task { await PhotoIntake.openCamera(showCamera: $showCamera, showLibrary: $showLibrary) } }
+                            .buttonStyle(BlockButtonStyle(filled: true))
+                        Button("Library") { showLibrary = true }
+                            .buttonStyle(BlockButtonStyle(filled: false))
+                    }
+                    Button("Log without a photo") { loggingManual = true }
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(Palette.muted)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 44)
-                        .buttonStyle(PressScaleStyle())
-                    }
+                        .frame(maxWidth: .infinity, minHeight: 44)
 
                     if meals.isEmpty {
-                        Text("No meals yet. Photograph a plate to log it.")
+                        Text("Photograph a plate to log it.")
                             .font(.system(size: 15))
                             .foregroundStyle(Palette.muted)
                             .cardSurface()
                     } else {
-                        VStack(alignment: .leading, spacing: 10) {
-                            SectionLabel(text: "Recent")
-                            VStack(spacing: 0) {
-                                ForEach(Array(meals.enumerated()), id: \.element.id) { index, meal in
-                                    Button { editing = meal } label: {
-                                        MealRow(meal: meal)
-                                            .padding(.horizontal, Palette.Space.cardPad)
-                                    }
-                                    .buttonStyle(PressScaleStyle())
-                                    .contextMenu {
-                                        Button("Edit") { editing = meal }
-                                        Button("Delete", role: .destructive) { delete(meal) }
-                                    }
-                                    if index < meals.count - 1 {
-                                        ListRowDivider()
-                                    }
+                        GroupedCard(title: "Recent") {
+                            ForEach(Array(meals.enumerated()), id: \.element.id) { index, meal in
+                                Button { editing = meal } label: {
+                                    MealRow(meal: meal).padding(.horizontal, Palette.Space.cardPad)
                                 }
+                                .buttonStyle(PressScaleStyle())
+                                .contextMenu {
+                                    Button("Edit") { editing = meal }
+                                    Button("Delete", role: .destructive) { delete(meal) }
+                                }
+                                if index < meals.count - 1 { ListRowDivider() }
                             }
-                            .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous)
-                                    .stroke(Palette.line, lineWidth: 1)
-                            )
                         }
                     }
                 }
                 .padding(Palette.Space.screen)
-                .padding(.bottom, 12)
             }
             .refreshable { await sync.refresh(context: context) }
             .modifier(Screen())
             .navigationTitle("Food")
-            .navigationBarTitleDisplayMode(.large)
-            .fullScreenCover(isPresented: $showCamera, onDismiss: {
-                if pendingJPEG != nil { showLogSheet = true }
+            .photoIntake(
+                showCamera: $showCamera,
+                showLibrary: $showLibrary,
+                item: $photoItem,
+                jpeg: $pendingJPEG,
+                preview: $pendingImage,
+                showReview: $showLogSheet
+            )
+            .sheet(isPresented: $showLogSheet, onDismiss: {
+                pendingJPEG = nil
+                pendingImage = nil
             }) {
-                CameraPicker(
-                    onImage: { image in
-                        if let jpeg = MealPhotoJPEG.make(from: image),
-                           let preview = UIImage(data: jpeg)
-                        {
-                            pendingJPEG = jpeg
-                            pendingImage = preview
-                        }
-                        showCamera = false
-                    },
-                    onCancel: { showCamera = false }
-                )
-                .ignoresSafeArea()
-            }
-            .photosPicker(isPresented: $showLibrary, selection: $photoItem, matching: .images)
-            .onChange(of: photoItem) { _, item in
-                Task { await loadPickedPhoto(item) }
-            }
-            .sheet(isPresented: $showLogSheet, onDismiss: handleLogDismiss) {
                 if let jpeg = pendingJPEG, let image = pendingImage {
                     MealReviewSheet(jpeg: jpeg, preview: image)
                 }
             }
-            .sheet(isPresented: $loggingManual) {
-                LogMealSheet()
-            }
-            .sheet(item: $editing) { meal in
-                LogMealSheet(meal: meal)
-            }
-        }
-    }
-
-    private func openCamera() async {
-        if await CameraAccess.request() {
-            showCamera = true
-        } else {
-            showLibrary = true
-        }
-    }
-
-    private func handleLogDismiss() {
-        pendingJPEG = nil
-        pendingImage = nil
-    }
-
-    private func loadPickedPhoto(_ item: PhotosPickerItem?) async {
-        guard let item else { return }
-        photoItem = nil
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let jpeg = MealPhotoJPEG.make(from: data),
-                  let preview = UIImage(data: jpeg)
-            else { return }
-            pendingJPEG = jpeg
-            pendingImage = preview
-            showLogSheet = true
-        } catch {
-            return
+            .sheet(isPresented: $loggingManual) { LogMealSheet() }
+            .sheet(item: $editing) { LogMealSheet(meal: $0) }
         }
     }
 
@@ -298,7 +223,7 @@ struct LogMealSheet: View {
                                 .font(.system(size: 14, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .foregroundStyle(Color.white)
+                                .foregroundStyle(Palette.onAccent)
                                 .background(Palette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                         .buttonStyle(.plain)

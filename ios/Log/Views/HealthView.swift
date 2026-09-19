@@ -26,7 +26,15 @@ struct HealthView: View {
                             exercise: health.snapshot.exerciseMinutes,
                             stand: health.snapshot.standHours
                         )
-                        groupedMetrics
+                        GroupedCard {
+                            metricRow("Steps", Formatters.int(health.snapshot.steps), "")
+                            ListRowDivider()
+                            metricRow("Sleep", Formatters.oneDecimal(health.snapshot.sleepHours), "hr")
+                            ListRowDivider()
+                            metricRow("Resting HR", Formatters.int(health.snapshot.restingHeartRate), "bpm")
+                            ListRowDivider()
+                            metricRow("Heart Rate", Formatters.int(health.snapshot.averageHeartRate), "bpm")
+                        }
                     }
 
                     weightHero
@@ -65,23 +73,6 @@ struct HealthView: View {
         weights.contains { $0.day == DayStamp.today() }
     }
 
-    private var groupedMetrics: some View {
-        VStack(spacing: 0) {
-            metricRow("Steps", Formatters.int(health.snapshot.steps), "")
-            rowDivider
-            metricRow("Sleep", Formatters.oneDecimal(health.snapshot.sleepHours), "hr")
-            rowDivider
-            metricRow("Resting HR", Formatters.int(health.snapshot.restingHeartRate), "bpm")
-            rowDivider
-            metricRow("Heart Rate", Formatters.int(health.snapshot.averageHeartRate), "bpm")
-        }
-        .background(Palette.surface, in: RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Palette.Radius.card, style: .continuous)
-                .stroke(Palette.line, lineWidth: 1)
-        )
-    }
-
     private var weightHero: some View {
         HStack(alignment: .bottom, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
@@ -106,15 +97,13 @@ struct HealthView: View {
             Spacer(minLength: 8)
             Button(todayLogged ? "Logged" : "Log") { logWeightNow() }
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Palette.onAccent)
                 .padding(.horizontal, 18)
-                .padding(.vertical, 10)
-                .frame(minHeight: 44)
+                .frame(minHeight: 40)
                 .background(Palette.accent, in: Capsule())
-                .padding(.bottom, 8)
                 .buttonStyle(PressScaleStyle(enabled: !todayLogged))
                 .disabled(todayLogged)
-                .opacity(todayLogged ? 0.5 : 1)
+                .opacity(todayLogged ? 0.45 : 1)
         }
         .cardSurface()
     }
@@ -139,13 +128,6 @@ struct HealthView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
-    }
-
-    private var rowDivider: some View {
-        Rectangle()
-            .fill(Palette.line)
-            .frame(height: 1)
-            .padding(.leading, 16)
     }
 
     private func logWeightNow() {
