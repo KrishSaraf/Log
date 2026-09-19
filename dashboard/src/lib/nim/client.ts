@@ -9,6 +9,7 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { readFileSync } from "node:fs";
 import { writeFile, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -18,6 +19,41 @@ import https from "node:https";
 import { URL } from "node:url";
 
 const execFileAsync = promisify(execFile);
+
+/** Prefer dashboard/.env.local over ambient shell exports (Next does not override). */
+function envLocalValue(name: string): string | undefined {
+  try {
+    const text = readFileSync(join(process.cwd(), ".env.local"), "utf8");
+    for (const line of text.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const i = trimmed.indexOf("=");
+      if (i < 0) continue;
+      if (trimmed.slice(0, i).trim() !== name) continue;
+      let value = trimmed.slice(i + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      return value || undefined;
+    }
+  } catch {
+    /* no .env.local */
+  }
+  return undefined;
+}
+
+function requireEnv(name: string) {
+  const value = envLocalValue(name)?.trim() || process.env[name]?.trim();
+  if (!value) {
+    throw new Error(
+      `${name} is not set. Add it to dashboard/.env.local (see .env.example).`,
+    );
+  }
+  return value;
+}
 
 export type NimContentPart =
   | { type: "text"; text: string }
@@ -35,24 +71,16 @@ export type NimChatOptions = {
   maxTokens?: number;
 };
 
-function requireEnv(name: string) {
-  const value = process.env[name]?.trim();
-  if (!value) {
-    throw new Error(
-      `${name} is not set. Add it to dashboard/.env.local (see .env.example).`,
-    );
-  }
-  return value;
-}
-
 export function nimConfig() {
   return {
     apiKey: requireEnv("NVIDIA_API_KEY"),
-    baseUrl: (process.env.NVIDIA_BASE_URL ?? "https://integrate.api.nvidia.com/v1").replace(
-      /\/$/,
-      "",
-    ),
+    baseUrl: (
+      envLocalValue("NVIDIA_BASE_URL") ??
+      process.env.NVIDIA_BASE_URL ??
+      "https://integrate.api.nvidia.com/v1"
+    ).replace(/\/$/, ""),
     model:
+      envLocalValue("NVIDIA_VISION_MODEL")?.trim() ||
       process.env.NVIDIA_VISION_MODEL?.trim() ||
       "meta/llama-3.2-11b-vision-instruct",
   };

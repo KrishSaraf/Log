@@ -1,4 +1,4 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 
 import { db, healthMetrics, questionResponses, questions, workouts } from "@/db";
 import { toNumber } from "@/lib/format";
@@ -117,7 +117,7 @@ function splitRanges(dates: string[], gapDays = 21): { start: string; end: strin
   return ranges;
 }
 
-export async function loadHabitsDashboard(): Promise<HabitsDashboard> {
+export async function loadHabitsDashboard(userId: string): Promise<HabitsDashboard> {
   const [questionRows, responseRows, weightRows, workoutRows] = await Promise.all([
     safely(
       () =>
@@ -129,6 +129,7 @@ export async function loadHabitsDashboard(): Promise<HabitsDashboard> {
             isActive: questions.isActive,
           })
           .from(questions)
+          .where(eq(questions.userId, userId))
           .orderBy(asc(questions.orderIndex)),
       [] as HabitQuestion[],
       "habit questions",
@@ -144,7 +145,8 @@ export async function loadHabitsDashboard(): Promise<HabitsDashboard> {
             valueNumeric: questionResponses.valueNumeric,
             note: questionResponses.note,
           })
-          .from(questionResponses),
+          .from(questionResponses)
+          .where(eq(questionResponses.userId, userId)),
       [] as {
         questionId: string;
         date: string;
@@ -163,7 +165,12 @@ export async function loadHabitsDashboard(): Promise<HabitsDashboard> {
             value: healthMetrics.value,
           })
           .from(healthMetrics)
-          .where(eq(healthMetrics.metric, "weight_kg"))
+          .where(
+            and(
+              eq(healthMetrics.userId, userId),
+              eq(healthMetrics.metric, "weight_kg"),
+            ),
+          )
           .orderBy(asc(healthMetrics.date)),
       [] as { date: string; value: string }[],
       "weight series",
@@ -178,6 +185,7 @@ export async function loadHabitsDashboard(): Promise<HabitsDashboard> {
             notes: workouts.notes,
           })
           .from(workouts)
+          .where(eq(workouts.userId, userId))
           .orderBy(desc(workouts.date), asc(workouts.name)),
       [] as { id: string; date: string; name: string | null; notes: string | null }[],
       "workout sessions",

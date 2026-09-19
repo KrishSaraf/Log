@@ -11,14 +11,17 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { hub, sourceEnum } from "./_shared";
 import { exercises } from "./exercises";
 
-/** One training session on one calendar day. */
 export const workouts = hub.table(
   "workouts",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     date: date("date").notNull(),
     name: text("name"),
     notes: text("notes"),
@@ -29,16 +32,16 @@ export const workouts = hub.table(
       .defaultNow(),
   },
   (t) => [
-    index("workouts_date_idx").on(t.date),
-    uniqueIndex("workouts_day_name_source_uq").on(t.date, t.name, t.source),
+    index("workouts_user_date_idx").on(t.userId, t.date),
+    uniqueIndex("workouts_user_day_name_source_uq").on(
+      t.userId,
+      t.date,
+      t.name,
+      t.source,
+    ),
   ],
 );
 
-/**
- * An exercise slot inside a workout. `exerciseId` points at the shared
- * library; when it is null the slot is a one-off and `customName` carries the
- * label. Exactly one of the two should be set.
- */
 export const workoutExercises = hub.table(
   "workout_exercises",
   {
@@ -59,11 +62,6 @@ export const workoutExercises = hub.table(
   ],
 );
 
-/**
- * A single set. Which numeric columns are populated depends on the movement:
- * lifting uses reps + weightKg, cardio uses durationSeconds + distanceM,
- * bodyweight holds use durationSeconds alone.
- */
 export const workoutSets = hub.table(
   "workout_sets",
   {
@@ -86,8 +84,9 @@ export const workoutSets = hub.table(
   ],
 );
 
-export const workoutsRelations = relations(workouts, ({ many }) => ({
+export const workoutsRelations = relations(workouts, ({ many, one }) => ({
   exercises: many(workoutExercises),
+  user: one(users, { fields: [workouts.userId], references: [users.id] }),
 }));
 
 export const workoutExercisesRelations = relations(

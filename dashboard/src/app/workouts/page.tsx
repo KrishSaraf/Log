@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { BarbellIcon, ListMagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
-import { count, desc } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 
+import { auth } from "@/auth";
 import { WorkoutAiLogger } from "@/components/workouts/workout-ai-logger";
 import { SessionHistory } from "@/components/workouts/session-history";
 import { MetricCard, Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/kit";
-import { db, exercises, workouts, workoutSets } from "@/db";
+import { db, exercises, workoutExercises, workouts, workoutSets } from "@/db";
 import { formatShortDate } from "@/lib/format";
 import { loadHabitsDashboard } from "@/lib/habits";
 import { safely } from "@/lib/safe-query";
@@ -15,10 +17,25 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Workouts" };
 
 export default async function WorkoutsPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+  const userId = session.user.id;
+
   const [data, setCount, libraryCount, lastDate] = await Promise.all([
-    loadHabitsDashboard(),
+    loadHabitsDashboard(userId),
     safely(
-      async () => (await db.select({ n: count() }).from(workoutSets))[0]?.n ?? 0,
+      async () =>
+        (
+          await db
+            .select({ n: count() })
+            .from(workoutSets)
+            .innerJoin(
+              workoutExercises,
+              eq(workoutSets.workoutExerciseId, workoutExercises.id),
+            )
+            .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+            .where(eq(workouts.userId, userId))
+        )[0]?.n ?? 0,
       0,
       "set count",
     ),
@@ -33,6 +50,7 @@ export default async function WorkoutsPage() {
           await db
             .select({ date: workouts.date })
             .from(workouts)
+            .where(eq(workouts.userId, userId))
             .orderBy(desc(workouts.date))
             .limit(1)
         )[0]?.date ?? null,

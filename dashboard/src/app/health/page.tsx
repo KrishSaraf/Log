@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { HeartbeatIcon, PulseIcon, ScalesIcon } from "@phosphor-icons/react/dist/ssr";
-import { count, desc, max, sql } from "drizzle-orm";
+import { count, desc, eq, max, sql } from "drizzle-orm";
 
+import { auth } from "@/auth";
 import { WeightTrend } from "@/components/health/weight-trend";
 import {
   EmptyState,
@@ -28,8 +30,12 @@ const METRIC_LABELS: Record<string, string> = {
 };
 
 export default async function HealthPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+  const userId = session.user.id;
+
   const [data, coverage] = await Promise.all([
-    loadHabitsDashboard(),
+    loadHabitsDashboard(userId),
     safely(
       () =>
         db
@@ -39,6 +45,7 @@ export default async function HealthPage() {
             latest: max(healthMetrics.date),
           })
           .from(healthMetrics)
+          .where(eq(healthMetrics.userId, userId))
           .groupBy(healthMetrics.metric)
           .orderBy(desc(sql`count(*)`)),
       [] as { metric: string; readings: number; latest: string | null }[],

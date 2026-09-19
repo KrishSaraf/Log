@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { db, workoutExercises, workouts, workoutSets } from "@/db";
+import { AuthRequiredError, requireUserId } from "@/lib/auth-user";
 import { todayIso } from "@/lib/format";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    const userId = await requireUserId();
     const body = (await req.json()) as {
       name?: string | null;
       date?: string;
@@ -43,6 +45,7 @@ export async function POST(req: Request) {
           const [row] = await tx
             .insert(workouts)
             .values({
+              userId,
               date,
               name: finalName,
               notes: body.notes ?? null,
@@ -93,6 +96,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ workoutId, date, name: baseName });
   } catch (err) {
+    if (err instanceof AuthRequiredError) {
+      return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+    }
     const message = err instanceof Error ? err.message : "Could not save workout.";
     return NextResponse.json({ error: message }, { status: 500 });
   }

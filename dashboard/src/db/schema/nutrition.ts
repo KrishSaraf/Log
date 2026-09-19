@@ -9,13 +9,16 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { hub, mealTypeEnum, sourceEnum } from "./_shared";
 
-/** One eating occasion. Macros are not stored here, they roll up from food entries. */
 export const meals = hub.table(
   "meals",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     date: date("date").notNull(),
     name: text("name"),
     mealType: mealTypeEnum("meal_type").notNull().default("snack"),
@@ -26,13 +29,9 @@ export const meals = hub.table(
       .notNull()
       .defaultNow(),
   },
-  (t) => [index("meals_date_idx").on(t.date)],
+  (t) => [index("meals_user_date_idx").on(t.userId, t.date)],
 );
 
-/**
- * A single food within a meal. Calories and macros are per entry, already
- * scaled to `quantity`, so a day total is a plain SUM with no unit maths.
- */
 export const foodEntries = hub.table(
   "food_entries",
   {
@@ -51,8 +50,9 @@ export const foodEntries = hub.table(
   (t) => [index("food_entries_meal_idx").on(t.mealId)],
 );
 
-export const mealsRelations = relations(meals, ({ many }) => ({
+export const mealsRelations = relations(meals, ({ many, one }) => ({
   foodEntries: many(foodEntries),
+  user: one(users, { fields: [meals.userId], references: [users.id] }),
 }));
 
 export const foodEntriesRelations = relations(foodEntries, ({ one }) => ({

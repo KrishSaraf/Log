@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
+import { auth } from "@/auth";
 import {
   EmptyState,
   PageHeader,
@@ -19,6 +21,10 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Insights" };
 
 export default async function InsightsPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+  const userId = session.user.id;
+
   const rows = await safely(
     () =>
       db
@@ -30,6 +36,7 @@ export default async function InsightsPage() {
           kind: insights.kind,
         })
         .from(insights)
+        .where(eq(insights.userId, userId))
         .orderBy(desc(insights.date))
         .limit(20),
     [] as {

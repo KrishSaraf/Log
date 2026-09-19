@@ -1,19 +1,17 @@
 import { date, index, jsonb, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { hub } from "./_shared";
 
-/** Free-form payload an insight can attach for its own renderer. */
 export type InsightData = Record<string, unknown>;
 
-/**
- * A generated observation about a day or period. `kind` is open text so new
- * generators can be added without a migration. Known kinds so far:
- * "summary", "trend", "anomaly", "suggestion", "streak".
- */
 export const insights = hub.table(
   "insights",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     date: date("date").notNull(),
     title: text("title").notNull(),
     body: text("body"),
@@ -23,7 +21,7 @@ export const insights = hub.table(
       .notNull()
       .defaultNow(),
   },
-  (t) => [index("insights_date_idx").on(t.date)],
+  (t) => [index("insights_user_date_idx").on(t.userId, t.date)],
 );
 
 export type Insight = typeof insights.$inferSelect;

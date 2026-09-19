@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ListChecksIcon, NotePencilIcon } from "@phosphor-icons/react/dist/ssr";
 
+import { auth } from "@/auth";
 import {
   EmptyState,
   PageHeader,
@@ -17,7 +19,10 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Log" };
 
 export default async function LogPage() {
-  const data = await loadHabitsDashboard();
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+
+  const data = await loadHabitsDashboard(session.user.id);
 
   return (
     <div className="space-y-8">

@@ -14,9 +14,11 @@ Stored in `dashboard/.env.local` (gitignored). Never commit the key. If the key 
 
 ## Transport note
 
-Next.js Turbopack’s bundled `fetch` / `node:https` hung (~90s) talking to NVIDIA. The client shells out to system `curl` instead (`src/lib/nim/client.ts`), which returns in ~1–3s.
+Next’s bundled `fetch` / bare `curl` DNS can stall ~45–90s to `integrate.api.nvidia.com`. The client (`src/lib/nim/client.ts`) uses `/usr/bin/curl -4` with a pinned A record (`--resolve`), keeps the bearer token in a temp config file (not `ps` argv), and falls back to `https` dialing that same IPv4.
 
-Workout shorthand (`bench 3x10 @50kg`) is parsed locally and never calls the model.
+Use **`meta/llama-3.2-11b-vision-instruct`** in `.env.local`. The 90B vision model often stalls. The client reads NVIDIA_* from `.env.local` first so a shell export cannot override it.
+
+Restart `npm run dev` after changing other Next env; model/key are re-read from `.env.local` on each request.
 
 ## Flows
 

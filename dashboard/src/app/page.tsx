@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { DayHabitView } from "@/components/habits/day-habit-view";
 import { WeightTrend } from "@/components/health/weight-trend";
 import {
@@ -8,6 +10,7 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/kit";
+import { auth } from "@/auth";
 import { CHART_HEIGHT } from "@/lib/chart-theme";
 import { formatShortDate } from "@/lib/format";
 import { loadHabitsDashboard } from "@/lib/habits";
@@ -18,7 +21,10 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Today" };
 
 export default async function HabitsPage() {
-  const data = await loadHabitsDashboard();
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+
+  const data = await loadHabitsDashboard(session.user.id);
   const mainRange = data.ranges.find((range) => range.days.length > 30);
   const trendWeights = mainRange
     ? data.weights.filter(

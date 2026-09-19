@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { db, foodEntries, meals } from "@/db";
+import { AuthRequiredError, requireUserId } from "@/lib/auth-user";
 import { todayIso } from "@/lib/format";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    const userId = await requireUserId();
     const body = (await req.json()) as {
       date?: string;
       mealName?: string | null;
@@ -33,6 +35,7 @@ export async function POST(req: Request) {
       const [row] = await tx
         .insert(meals)
         .values({
+          userId,
           date,
           name: body.mealName ?? "Meal",
           mealType: body.mealType ?? "snack",
@@ -59,6 +62,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ mealId: meal.id, date: meal.date });
   } catch (err) {
+    if (err instanceof AuthRequiredError) {
+      return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+    }
     const message = err instanceof Error ? err.message : "Could not save meal.";
     return NextResponse.json({ error: message }, { status: 500 });
   }

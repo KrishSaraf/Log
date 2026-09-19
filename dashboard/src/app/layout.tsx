@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { AuthProvider } from "@/components/shell/auth-provider";
 import { AppShell } from "@/components/shell/app-shell";
 import { ServiceWorkerRegister } from "@/components/shell/sw-register";
 import "./globals.css";
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     default: "Log",
     template: "%s · Log",
   },
-  description: "Krish's health, training and lifestyle command center.",
+  description: "Your health, training and lifestyle command center.",
   applicationName: "Log",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -62,8 +63,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full antialiased">
-        <AppShell>{children}</AppShell>
-        <ServiceWorkerRegister />
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+          <ServiceWorkerRegister />
+        </AuthProvider>
       </body>
     </html>
   );

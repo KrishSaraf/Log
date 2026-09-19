@@ -4,11 +4,10 @@ The app is a normal website you open in Safari or Chrome. AI photo/text calls st
 
 ## Same Wi‑Fi (dev on your Mac)
 
-1. On the Mac, leave the dashboard running (`npm run dev` in `dashboard/`).
-2. Note the Network URL Next prints, e.g. `http://192.168.68.64:3001`.
-3. On the phone, open that URL on the same Wi‑Fi.
-4. If it won’t load, allow incoming connections for Node in macOS Firewall, or run:
-   `npm run dev -- --hostname 0.0.0.0`
+1. On the Mac, leave the dashboard running (`npm run dev` in `dashboard/` — binds `0.0.0.0:3001`).
+2. Open **`http://192.168.68.64:3001`** on the phone (same Wi‑Fi). Your LAN IP may differ; check `ipconfig getifaddr en0` on the Mac.
+3. If it won’t load, allow Node in macOS Firewall.
+4. AI photo/text calls stay on the Mac — the phone never needs the cloud key.
 
 ## Add to Home Screen
 

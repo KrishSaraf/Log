@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ForkKnifeIcon } from "@phosphor-icons/react/dist/ssr";
 import { desc, eq, sql } from "drizzle-orm";
 
+import { auth } from "@/auth";
 import { FoodPhotoLogger } from "@/components/nutrition/food-photo-logger";
 import {
   EmptyState,
@@ -21,6 +23,9 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Nutrition" };
 
 export default async function NutritionPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+  const userId = session.user.id;
   const today = todayIso();
 
   const recent = await safely(
@@ -36,6 +41,7 @@ export default async function NutritionPage() {
         })
         .from(meals)
         .leftJoin(foodEntries, eq(foodEntries.mealId, meals.id))
+        .where(eq(meals.userId, userId))
         .groupBy(meals.id)
         .orderBy(desc(meals.date), desc(meals.createdAt))
         .limit(12),
