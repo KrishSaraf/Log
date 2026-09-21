@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 0.2.0
+  description: Krish Workout exercise library API
 servers:
   - url: /api
     description: Base API path
@@ -34,17 +34,22 @@ paths:
       parameters:
         - name: search
           in: query
-          description: Search term to filter exercises by name
+          description: Search term to filter exercises by name or target muscle
           schema:
             type: string
         - name: bodyPart
           in: query
-          description: Filter by body part/muscle group
+          description: Filter by body part
           schema:
             type: string
         - name: equipment
           in: query
           description: Filter by equipment type
+          schema:
+            type: string
+        - name: target
+          in: query
+          description: Filter by primary target muscle
           schema:
             type: string
         - name: page
@@ -53,12 +58,15 @@ paths:
           schema:
             type: integer
             default: 1
+            minimum: 1
         - name: limit
           in: query
           description: Items per page
           schema:
             type: integer
             default: 24
+            minimum: 1
+            maximum: 100
       responses:
         "200":
           description: List of exercises
@@ -66,6 +74,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ExerciseListResponse"
+        "400":
+          description: Invalid params
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createExercise
+      tags: [exercises]
+      summary: Create a custom exercise
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExerciseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Exercise"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /exercises/filters:
+    get:
+      operationId: getExerciseFilters
+      tags: [exercises]
+      summary: Get available filter options
+      description: Returns distinct body parts, equipment, and target muscles
+      responses:
+        "200":
+          description: Available filter options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseFilters"
   /exercises/{id}:
     get:
       operationId: getExercise
@@ -90,19 +140,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /exercises/filters:
-    get:
-      operationId: getExerciseFilters
+    put:
+      operationId: updateExercise
       tags: [exercises]
-      summary: Get available filter options
-      description: Returns all available body parts and equipment types
+      summary: Update an exercise
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExerciseInput"
       responses:
         "200":
-          description: Available filter options
+          description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExerciseFilters"
+                $ref: "#/components/schemas/Exercise"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteExercise
+      tags: [exercises]
+      summary: Delete an exercise
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -141,6 +226,7 @@ components:
             type: string
         level:
           type: string
+          enum: [beginner, intermediate, expert]
       required:
         - id
         - name
@@ -152,6 +238,43 @@ components:
         - instructions
         - images
         - level
+    ExerciseInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        bodyPart:
+          type: string
+          minLength: 1
+        equipment:
+          type: string
+          minLength: 1
+        gifUrl:
+          type: string
+        target:
+          type: string
+          minLength: 1
+        secondaryMuscles:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+        level:
+          type: string
+          enum: [beginner, intermediate, expert]
+      required:
+        - name
+        - bodyPart
+        - equipment
+        - target
     ExerciseListResponse:
       type: object
       properties:
@@ -184,9 +307,14 @@ components:
           type: array
           items:
             type: string
+        targets:
+          type: array
+          items:
+            type: string
       required:
         - bodyParts
         - equipment
+        - targets
     ErrorResponse:
       type: object
       properties:

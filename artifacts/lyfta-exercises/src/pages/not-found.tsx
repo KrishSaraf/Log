@@ -1,19 +1,18 @@
 import { Link } from "wouter";
-import { Dumbbell } from "lucide-react";
+import { Button } from "@/components/primitives";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-8 border border-white/10 shadow-2xl">
-        <Dumbbell className="w-10 h-10 text-primary" />
-      </div>
-      <h1 className="text-6xl font-display font-bold text-white mb-4 tracking-tighter">404</h1>
-      <p className="text-xl text-white/50 mb-8 font-medium">This workout routine doesn't exist.</p>
-      <Link 
-        href="/" 
-        className="px-8 py-4 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1 transition-all"
-      >
-        Back to Library
+    <div className="min-h-dvh flex flex-col items-center justify-center px-6 text-center">
+      <p className="mb-2 font-display text-6xl font-extrabold text-accent tabular-nums">
+        404
+      </p>
+      <h1 className="mb-3 font-display text-2xl font-bold">Page not found</h1>
+      <p className="mb-8 max-w-sm text-muted">
+        That route doesn’t exist in the Krish Workout library.
+      </p>
+      <Link href="/">
+        <Button>Back to exercises</Button>
       </Link>
     </div>
   );
