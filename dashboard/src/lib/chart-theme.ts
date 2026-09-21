@@ -1,9 +1,8 @@
 /**
- * Chart palette and axis defaults.
+ * Chart palette and axis defaults for pure SVG charts.
  *
- * Recharts writes most colours straight onto SVG presentation attributes, so
- * these are literal values rather than `var(--chart-1)` references. They mirror
- * the tokens in globals.css: if you change one, change both.
+ * Literal hex values (not CSS vars) so SVG presentation attributes stay
+ * deterministic. Mirror tokens in globals.css: if you change one, change both.
  */
 export const CHART_COLORS = {
   lime: "#C6F135",
@@ -32,41 +31,6 @@ export const CHART_INK = {
   axis: "rgba(255,255,255,0.10)",
   tick: "#65656e",
   cursor: "rgba(255,255,255,0.06)",
-} as const;
-
-/** Spread onto `<CartesianGrid />`. Horizontal rules only, no vertical noise. */
-export const gridProps = {
-  stroke: CHART_INK.grid,
-  strokeDasharray: "0",
-  vertical: false,
-} as const;
-
-/** Spread onto `<XAxis />` and `<YAxis />`. */
-export const axisProps = {
-  stroke: CHART_INK.axis,
-  tickLine: false,
-  axisLine: false,
-  tick: {
-    fill: CHART_INK.tick,
-    fontSize: 11,
-    fontFamily: "var(--font-mono)",
-  },
-  tickMargin: 8,
-} as const;
-
-/** Spread onto `<Tooltip />` for a surface that matches Panel. */
-export const tooltipProps = {
-  cursor: { fill: CHART_INK.cursor, stroke: "transparent" },
-  contentStyle: {
-    background: "#17171a",
-    border: "1px solid rgba(255,255,255,0.13)",
-    borderRadius: "0.5rem",
-    padding: "8px 10px",
-    fontSize: 12,
-    boxShadow: "none",
-  },
-  labelStyle: { color: "#9a9aa3", marginBottom: 4, fontSize: 11 },
-  itemStyle: { color: "#ededef", fontFamily: "var(--font-mono)" },
 } as const;
 
 /** Standard chart heights so panels line up across pages. */

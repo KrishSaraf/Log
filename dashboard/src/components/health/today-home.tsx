@@ -15,6 +15,7 @@ import {
 
 import { ActivityRings } from "@/components/health/activity-rings";
 import { QuickLog } from "@/components/health/quick-log";
+import { TodayHabits } from "@/components/health/today-habits";
 import { ManualMealLogger } from "@/components/nutrition/manual-meal-logger";
 import { NutritionRings } from "@/components/nutrition/nutrition-rings";
 import { RecentMealList } from "@/components/nutrition/recent-meal-list";
@@ -23,6 +24,7 @@ import {
   EmptyState,
   MetricCard,
   Panel,
+  PanelActions,
   PanelBody,
   PanelDescription,
   PanelHeader,
@@ -99,7 +101,7 @@ function greetingForHour(hour: number) {
 }
 
 export function TodayHome({ summary }: { summary: TodaySummary }) {
-  const { metrics, rings, recent, connectedCount, nutrition, connections } =
+  const { metrics, rings, recent, connectedCount, nutrition, connections, habits } =
     summary;
   const hasActivity =
     metrics.activeCalories !== null ||
@@ -277,6 +279,30 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 </Link>
               </div>
             )}
+          </PanelBody>
+        </Panel>
+      </section>
+
+      <section aria-label="Habits" className="reveal reveal-delay-2">
+        <Panel className="overflow-hidden">
+          <PanelHeader>
+            <div className="min-w-0">
+              <PanelTitle>Habits</PanelTitle>
+              <PanelDescription>
+                Today&apos;s ticks — tap to mark, heat shows the week
+              </PanelDescription>
+            </div>
+            <PanelActions>
+              <Link
+                href="/log"
+                className="text-xs font-medium text-lime hover:underline"
+              >
+                Full chains
+              </Link>
+            </PanelActions>
+          </PanelHeader>
+          <PanelBody>
+            <TodayHabits date={summary.date} habits={habits} />
           </PanelBody>
         </Panel>
       </section>

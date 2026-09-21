@@ -313,7 +313,7 @@ function ConnectionCard({
     <li
       style={style}
       className={cn(
-        "flex flex-col gap-4 rounded-xl border border-line bg-surface-raised/40 p-4",
+        "relative flex flex-col gap-4 overflow-hidden rounded-xl border border-line bg-surface-raised/40 p-4",
         "transition-[border-color,background-color,transform,box-shadow] duration-300",
         "animate-[reveal-up_320ms_var(--ease-out-quint)_both]",
         "hover:-translate-y-0.5 hover:border-lime-line/70",
@@ -325,6 +325,12 @@ function ConnectionCard({
           "border-lime-line/40",
       )}
     >
+      {connected ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lime/50 to-transparent"
+        />
+      ) : null}
       <div className="flex items-start gap-3">
         <span
           className={cn(

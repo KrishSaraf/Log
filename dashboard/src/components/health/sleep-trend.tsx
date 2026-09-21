@@ -1,24 +1,8 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ReferenceLine,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
 import { ChartFrame } from "@/components/kit";
-import {
-  axisProps,
-  CHART_COLORS,
-  CHART_HEIGHT,
-  gridProps,
-  tooltipProps,
-} from "@/lib/chart-theme";
+import { SimpleBarChart } from "@/components/kit/simple-charts";
+import { CHART_COLORS, CHART_HEIGHT } from "@/lib/chart-theme";
 import { formatDuration, formatShortDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -31,10 +15,10 @@ export type SleepTrendPoint = {
 };
 
 function qualityFill(quality: number | null): string {
-  if (quality == null) return CHART_COLORS.lime;
+  if (quality == null) return "url(#barGlow)";
   if (quality <= 2) return CHART_COLORS.steel;
   if (quality === 3) return CHART_COLORS.leaf;
-  return CHART_COLORS.lime;
+  return "url(#barGlow)";
 }
 
 function qualityLabel(quality: number | null): string {
@@ -45,7 +29,7 @@ function qualityLabel(quality: number | null): string {
 
 /**
  * Nightly sleep as soft lime bars — quality tints the fill, average draws a
- * quiet reference line. Beauty over density.
+ * quiet reference line. Pure SVG so it never blanks.
  */
 export function SleepTrend({
   points,
@@ -84,100 +68,64 @@ export function SleepTrend({
         withQuality.length
       : null;
 
-  const maxHours = Math.max(...points.map((p) => p.hours), 8);
-  const yMax = Math.min(14, Math.ceil(maxHours + 0.5));
-
   return (
     <div className={cn("space-y-4", className)}>
-      <ul className="grid grid-cols-3 gap-3">
+      <ul className="grid grid-cols-3 gap-2.5">
         <Stat
           label="Average"
           value={`${avg.toFixed(1)}h`}
           hint={`${points.length} night${points.length === 1 ? "" : "s"}`}
+          accent
         />
         <Stat
           label="Last night"
           value={`${latest.hours.toFixed(1)}h`}
-          hint={formatShortDate(latest.date)}
+          hint={
+            latest.quality != null
+              ? `${formatShortDate(latest.date)} · Q ${qualityLabel(latest.quality)}`
+              : formatShortDate(latest.date)
+          }
         />
         <Stat
           label="Quality"
-          value={
-            avgQuality != null ? avgQuality.toFixed(1) : "—"
-          }
+          value={avgQuality != null ? avgQuality.toFixed(1) : "—"}
           hint={avgQuality != null ? "avg / 5" : "not logged"}
         />
       </ul>
 
-      <ChartFrame height={height} caption="Hours per night · quality tints the bars">
-        <BarChart
-          data={points}
-          margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
-          barCategoryGap="28%"
-        >
-          <defs>
-            <linearGradient id="sleepBarGlow" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={CHART_COLORS.lime} stopOpacity={0.95} />
-              <stop offset="100%" stopColor={CHART_COLORS.lime} stopOpacity={0.55} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid {...gridProps} />
-          <XAxis
-            {...axisProps}
-            dataKey="date"
-            tickFormatter={(value: string) => formatShortDate(value)}
-            minTickGap={24}
-          />
-          <YAxis
-            {...axisProps}
-            domain={[0, yMax]}
-            width={36}
-            tickFormatter={(value: number) => `${value}`}
-            unit="h"
-          />
-          <Tooltip
-            {...tooltipProps}
-            cursor={{ fill: "rgba(198,241,53,0.06)" }}
-            labelFormatter={(value) => formatShortDate(String(value))}
-            formatter={(value, _name, item) => {
-              const quality = (item?.payload as SleepTrendPoint | undefined)
-                ?.quality;
-              const hours = Number(value);
-              const mins = Math.round(hours * 60);
-              return [
-                `${formatDuration(mins)} · Q ${qualityLabel(quality ?? null)}`,
-                "Sleep",
-              ];
-            }}
-          />
-          <ReferenceLine
-            y={avg}
-            stroke={CHART_COLORS.mist}
-            strokeDasharray="4 4"
-            strokeOpacity={0.7}
-            ifOverflow="extendDomain"
-          />
-          <Bar
-            dataKey="hours"
-            radius={[6, 6, 2, 2]}
-            maxBarSize={28}
-            isAnimationActive
-            animationDuration={700}
-            animationEasing="ease-out"
-          >
-            {points.map((point) => (
-              <Cell
-                key={point.date}
-                fill={
-                  point.quality == null || point.quality >= 4
-                    ? "url(#sleepBarGlow)"
-                    : qualityFill(point.quality)
-                }
-              />
-            ))}
-          </Bar>
-        </BarChart>
+      <ChartFrame
+        height={height}
+        caption="Hours per night · quality tints the bars"
+      >
+        <SimpleBarChart
+          points={points.map((p) => ({
+            date: p.date,
+            value: p.hours,
+            fill: qualityFill(p.quality),
+          }))}
+          height={height}
+          label="Sleep"
+          unit="h"
+          average={avg}
+          formatValue={(n) => {
+            if (n < 0.05) return "0";
+            return n.toFixed(n >= 10 ? 0 : 1);
+          }}
+        />
       </ChartFrame>
+
+      {latest ? (
+        <p className="text-xs text-text-faint">
+          Last night{" "}
+          <span className="num text-text-muted">
+            {formatDuration(Math.round(latest.hours * 60))}
+          </span>
+          {latest.quality != null
+            ? ` · felt ${qualityLabel(latest.quality).split(" · ")[1]?.toLowerCase() ?? "ok"}`
+            : ""}
+          . Aim near the dashed average.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -186,15 +134,31 @@ function Stat({
   label,
   value,
   hint,
+  accent = false,
 }: {
   label: string;
   value: string;
   hint: string;
+  accent?: boolean;
 }) {
   return (
-    <li className="rounded-lg border border-line bg-surface-sunken/60 px-3 py-2.5">
+    <li
+      className={cn(
+        "rounded-xl border px-3 py-2.5 transition-colors",
+        accent
+          ? "border-lime-line/60 bg-lime-quiet/35"
+          : "border-line bg-surface-sunken/50",
+      )}
+    >
       <p className="label-caps">{label}</p>
-      <p className="num mt-1 text-lg font-medium text-text">{value}</p>
+      <p
+        className={cn(
+          "num mt-1 text-lg font-medium tracking-tight",
+          accent ? "text-lime" : "text-text",
+        )}
+      >
+        {value}
+      </p>
       <p className="mt-0.5 truncate text-xs text-text-faint">{hint}</p>
     </li>
   );

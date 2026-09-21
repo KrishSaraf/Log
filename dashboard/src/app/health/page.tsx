@@ -21,6 +21,7 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/kit";
+import { SimpleSparkline } from "@/components/kit/simple-charts";
 import { getDashboardUserId } from "@/lib/auth-user";
 import { CHART_HEIGHT } from "@/lib/chart-theme";
 import { formatDuration, formatKg, formatShortDate, todayIso } from "@/lib/format";
@@ -97,6 +98,11 @@ export default async function HealthPage() {
               ? formatShortDate(data.latestWeight.date)
               : undefined
           }
+          sparkline={
+            historyWeights.length >= 2 ? (
+              <SimpleSparkline values={historyWeights.map((p) => p.kg)} />
+            ) : undefined
+          }
         />
         <MetricCard
           label="Sleep"
@@ -111,6 +117,11 @@ export default async function HealthPage() {
                 }`
               : undefined
           }
+          sparkline={
+            sleepTrend.length >= 2 ? (
+              <SimpleSparkline values={sleepTrend.map((p) => p.hours)} />
+            ) : undefined
+          }
         />
         <MetricCard
           label="Water"
@@ -120,6 +131,11 @@ export default async function HealthPage() {
           footnote={
             latestWater ? formatShortDate(latestWater.date) : undefined
           }
+          sparkline={
+            water.length >= 2 ? (
+              <SimpleSparkline values={water.map((p) => p.value)} />
+            ) : undefined
+          }
         />
         <MetricCard
           label="Resting HR"
@@ -127,6 +143,11 @@ export default async function HealthPage() {
           unit="bpm"
           icon={HeartbeatIcon}
           footnote={latestHr ? formatShortDate(latestHr.date) : undefined}
+          sparkline={
+            restingHr.length >= 2 ? (
+              <SimpleSparkline values={restingHr.map((p) => p.value)} />
+            ) : undefined
+          }
         />
       </div>
 

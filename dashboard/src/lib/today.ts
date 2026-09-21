@@ -1,14 +1,18 @@
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
 
 import {
   connectedSources,
   db,
   healthMetrics,
+  questionResponses,
+  questions,
   sleepSessions,
   workouts,
   type ConnectionProvider,
   type ConnectionStatus,
 } from "@/db";
+import { addDaysIso, habitStreak } from "@/lib/habit-chain";
+import { tickFromResponse, type Tick } from "@/lib/habits";
 import type { NutritionSummary } from "@/lib/nutrition";
 import { loadNutritionSummary } from "@/lib/nutrition";
 import { todayIso, toNumber } from "@/lib/format";
@@ -47,6 +51,15 @@ export type TodayConnection = {
   lastSyncAt: string | null;
 };
 
+export type TodayHabitRow = {
+  key: string;
+  label: string;
+  tick: Tick | null;
+  /** Last 7 days oldest → newest (today last). */
+  week: Array<Tick | null>;
+  streak: number;
+};
+
 export type TodaySummary = {
   date: string;
   metrics: TodayMetricMap;
@@ -57,6 +70,7 @@ export type TodaySummary = {
     stand: number;
   };
   nutrition: NutritionSummary;
+  habits: TodayHabitRow[];
   recent: TodayActivityItem[];
   connections: TodayConnection[];
   connectedCount: number;
@@ -131,6 +145,77 @@ function pickMetric(
   return toNumber(matches[0]?.value);
 }
 
+async function loadTodayHabits(userId: string, date: string): Promise<TodayHabitRow[]> {
+  const weekStart = addDaysIso(date, -6);
+
+  const habitRows = await safely(
+    () =>
+      db
+        .select({
+          id: questions.id,
+          key: questions.key,
+          label: questions.label,
+        })
+        .from(questions)
+        .where(and(eq(questions.userId, userId), eq(questions.isActive, true)))
+        .orderBy(asc(questions.orderIndex)),
+    [] as { id: string; key: string; label: string }[],
+    "today habits",
+  );
+
+  if (habitRows.length === 0) return [];
+
+  const ids = habitRows.map((h) => h.id);
+  const responses = await safely(
+    () =>
+      db
+        .select({
+          questionId: questionResponses.questionId,
+          date: questionResponses.date,
+          valueText: questionResponses.valueText,
+          valueBool: questionResponses.valueBool,
+          valueNumeric: questionResponses.valueNumeric,
+        })
+        .from(questionResponses)
+        .where(
+          and(
+            eq(questionResponses.userId, userId),
+            gte(questionResponses.date, addDaysIso(date, -60)),
+            inArray(questionResponses.questionId, ids),
+          ),
+        ),
+    [] as {
+      questionId: string;
+      date: string;
+      valueText: string | null;
+      valueBool: boolean | null;
+      valueNumeric: string | null;
+    }[],
+    "today habit responses",
+  );
+
+  return habitRows.map((habit) => {
+    const cells: Record<string, Tick | undefined> = {};
+    for (const row of responses) {
+      if (row.questionId !== habit.id) continue;
+      const tick = tickFromResponse(row);
+      if (tick) cells[row.date] = tick;
+    }
+    const week: Array<Tick | null> = [];
+    for (let i = 0; i < 7; i++) {
+      const d = addDaysIso(weekStart, i);
+      week.push(cells[d] ?? null);
+    }
+    return {
+      key: habit.key,
+      label: habit.label,
+      tick: cells[date] ?? null,
+      week,
+      streak: habitStreak(cells, date),
+    };
+  });
+}
+
 export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
   const date = todayIso();
   const recentFrom = daysAgoIso(14);
@@ -141,6 +226,7 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
     recentSleep,
     connections,
     nutrition,
+    habits,
   ] = await Promise.all([
       safely(
         () =>
@@ -224,6 +310,7 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
         "today connections",
       ),
       loadNutritionSummary(userId, { recentLimit: 8 }),
+      loadTodayHabits(userId, date),
     ]);
 
   const metrics: TodayMetricMap = {
@@ -297,6 +384,7 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
       stand: ringProgress(metrics.standHours, RING_GOALS.standHours),
     },
     nutrition,
+    habits,
     recent,
     connections: connectionRows,
     connectedCount: connectionRows.filter((c) => c.status === "connected").length,

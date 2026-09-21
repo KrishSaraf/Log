@@ -1,15 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { ResponsiveContainer } from "recharts";
 
 import { CHART_HEIGHT } from "@/lib/chart-theme";
 import { cn } from "@/lib/utils";
 
 /**
- * Wraps every Recharts tree so sizing, empty handling and the legend caption
- * are consistent. Pass a single Recharts chart element as the child; the
- * ResponsiveContainer is supplied here.
+ * Sized frame for SVG charts (and legacy empty states). No Recharts
+ * ResponsiveContainer — that was the source of blank panels when width
+ * resolved to 0 during SSR/hydration.
  */
 export function ChartFrame({
   children,
@@ -19,8 +18,7 @@ export function ChartFrame({
   caption,
   className,
 }: {
-  /** A single Recharts chart element. Omit it to force the empty treatment. */
-  children?: React.ReactElement;
+  children?: React.ReactNode;
   height?: number;
   isEmpty?: boolean;
   emptyLabel?: string;
@@ -38,10 +36,8 @@ export function ChartFrame({
           <p className="px-4 text-center text-xs text-text-faint">{emptyLabel}</p>
         </div>
       ) : (
-        <div style={{ height }}>
-          <ResponsiveContainer width="100%" height="100%">
-            {children}
-          </ResponsiveContainer>
+        <div style={{ height }} className="w-full min-w-0">
+          {children}
         </div>
       )}
       {caption ? (
