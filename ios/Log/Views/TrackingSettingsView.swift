@@ -6,6 +6,8 @@ struct TrackingSettingsView: View {
     @Environment(AppearancePreference.self) private var appearance
     @Environment(HealthKitService.self) private var health
     @Environment(\.dismiss) private var dismiss
+    @State private var syncBusy = false
+    @State private var syncMessage: String?
 
     var body: some View {
         @Bindable var prefs = prefs
@@ -96,6 +98,33 @@ struct TrackingSettingsView: View {
                 )
             }
             .groupedFill()
+
+            if health.access == .authorized {
+                HStack(spacing: 12) {
+                    Button {
+                        Task { await syncNow() }
+                    } label: {
+                        Text(syncBusy ? "Syncing…" : "Sync to Log")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Palette.onAccent)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 44)
+                            .background(Palette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .disabled(syncBusy)
+                    .opacity(syncBusy ? 0.7 : 1)
+                }
+
+                if let syncMessage {
+                    Text(syncMessage)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Palette.muted)
+                } else if let last = HealthKitRemoteSync.lastSyncAt {
+                    Text("Last sync · \(last.formatted(date: .omitted, time: .shortened))")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Palette.muted)
+                }
+            }
         }
     }
 
@@ -126,8 +155,26 @@ struct TrackingSettingsView: View {
         Task {
             await health.requestAccess()
             if health.access == .authorized {
-                await HealthKitRemoteSync.pushSnapshot(health.snapshot, access: health.access)
+                let result = await HealthKitRemoteSync.pushSnapshot(health.snapshot, access: health.access)
+                syncMessage = result.succeeded
+                    ? "Synced \(result.entryCount) metrics to Today"
+                    : "Couldn’t reach the dashboard — check website URL"
             }
+        }
+    }
+
+    private func syncNow() async {
+        syncBusy = true
+        defer { syncBusy = false }
+        // refresh() already pushes the snapshot to the hub.
+        await health.refresh()
+        if let last = HealthKitRemoteSync.lastSyncAt {
+            syncMessage = "Synced · \(last.formatted(date: .omitted, time: .shortened))"
+        } else {
+            let result = await HealthKitRemoteSync.pushSnapshot(health.snapshot, access: health.access)
+            syncMessage = result.succeeded
+                ? "Synced \(result.entryCount) metrics · \(result.at.formatted(date: .omitted, time: .shortened))"
+                : "Sync failed — check website URL in Settings"
         }
     }
 

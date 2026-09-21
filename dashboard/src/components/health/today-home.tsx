@@ -353,7 +353,7 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             <div className="min-w-0">
               <PanelTitle>Log a meal</PanelTitle>
               <PanelDescription>
-                Manual path into hub.meals + food_entries
+                Name, type, macros — same record as a photo save
               </PanelDescription>
             </div>
           </PanelHeader>

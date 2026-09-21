@@ -277,6 +277,16 @@
 
   .ring-glow {
     filter: drop-shadow(0 0 18px rgba(198, 241, 53, 0.22));
+    animation: ring-breathe 4.5s var(--ease-out-quint) infinite alternate;
+  }
+}
+
+@keyframes ring-breathe {
+  from {
+    filter: drop-shadow(0 0 12px rgba(198, 241, 53, 0.14));
+  }
+  to {
+    filter: drop-shadow(0 0 22px rgba(198, 241, 53, 0.28));
   }
 }
 
@@ -299,5 +309,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .ring-glow {
+    animation: none !important;
   }
 }
