@@ -181,7 +181,7 @@ export default function SettingsScreen() {
 
       <View style={styles.tokenCard}>
         <Text style={styles.tokenTitle}>Brand tokens</Text>
-        <Text style={styles.tokenLine}>accent #C6F135 · bg #0A0A0B · card #141416</Text>
+        <Text style={styles.tokenLine}>accent #C6F135 · bg #0A0A0B · surface #101012 · card #141416</Text>
         <Text style={styles.tokenLine}>radius 12 · Outfit + Inter</Text>
       </View>
     </ScrollView>

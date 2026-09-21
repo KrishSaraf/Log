@@ -4,7 +4,8 @@
  * | Token       | Value     |
  * |-------------|-----------|
  * | background  | #0A0A0B   |
- * | surface     | #141416   |
+ * | surface     | #101012   |
+ * | card        | #141416   |
  * | primary     | #C6F135   |
  * | onPrimary   | #0A0C08   |
  */
@@ -14,6 +15,7 @@ export const colors = {
   foreground: "#EDEDEF",
   card: "#141416",
   cardElevated: "#1A1A1E",
+  surface: "#101012",
   primary: "#C6F135",
   primaryMuted: "rgba(198, 241, 53, 0.14)",
   onPrimary: "#0A0C08",

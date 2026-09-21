@@ -24,7 +24,7 @@ export default async function ConnectionsPage() {
         description="One hub for every source — Apple Health live on iPhone, Health Connect and Google Fit stubbed for Android."
       />
 
-      <Panel className="overflow-hidden">
+      <Panel className="overflow-hidden reveal">
         <PanelHeader>
           <div className="min-w-0">
             <PanelTitle>Data sources</PanelTitle>

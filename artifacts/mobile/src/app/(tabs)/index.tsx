@@ -193,6 +193,25 @@ export default function TodayScreen() {
             <RingStat label="Calories" value="—" unit="kcal" tone={colors.move} />
             <RingStat label="Protein" value="—" unit="g" tone={colors.exercise} />
           </View>
+          <Text style={styles.hint}>
+            Empty for now — use the web Today sample lunch or snap a meal once hub sync is on.
+          </Text>
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.delay(170).duration(520).springify()}
+          style={styles.vitalsRow}
+        >
+          <View style={styles.vitalChip}>
+            <Text style={styles.vitalLabel}>Sleep</Text>
+            <Text style={styles.vitalValue}>Not logged</Text>
+            <Text style={styles.vitalHint}>Log on web or iOS</Text>
+          </View>
+          <View style={styles.vitalChip}>
+            <Text style={styles.vitalLabel}>Weight</Text>
+            <Text style={styles.vitalValue}>Not logged</Text>
+            <Text style={styles.vitalHint}>Body metrics on web</Text>
+          </View>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(200).duration(520).springify()}>
@@ -353,6 +372,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.faint,
     lineHeight: 17,
+  },
+  vitalsRow: {
+    flexDirection: "row",
+    gap: space.sm,
+  },
+  vitalChip: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingHorizontal: space.md,
+    paddingVertical: space.md,
+    minHeight: 88,
+    justifyContent: "center",
+    gap: 2,
+  },
+  vitalLabel: {
+    fontFamily: type.bodyMed,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: colors.primary,
+  },
+  vitalValue: {
+    fontFamily: type.displaySemi,
+    fontSize: 16,
+    color: colors.foreground,
+  },
+  vitalHint: {
+    fontFamily: type.body,
+    fontSize: 12,
+    color: colors.faint,
   },
   blockLabel: {
     fontFamily: type.bodyMed,

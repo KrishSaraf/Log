@@ -22,6 +22,9 @@ export type TodayMetricMap = {
   sleepMinutes: number | null;
   restingHeartRate: number | null;
   weightKg: number | null;
+  bodyFatPct: number | null;
+  waistCm: number | null;
+  leanMassKg: number | null;
   waterMl: number | null;
   mood: number | null;
   energy: number | null;
@@ -73,6 +76,9 @@ const EMPTY_METRICS: TodayMetricMap = {
   sleepMinutes: null,
   restingHeartRate: null,
   weightKg: null,
+  bodyFatPct: null,
+  waistCm: null,
+  leanMassKg: null,
   waterMl: null,
   mood: null,
   energy: null,
@@ -88,6 +94,9 @@ const METRIC_KEYS = [
   "sleep_minutes",
   "heart_rate_resting",
   "weight_kg",
+  "body_fat_pct",
+  "waist_cm",
+  "lean_mass_kg",
   "water_ml",
   "mood",
   "energy",
@@ -225,6 +234,9 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
     sleepMinutes: pickMetric(metricRows, "sleep_minutes"),
     restingHeartRate: pickMetric(metricRows, "heart_rate_resting"),
     weightKg: pickMetric(metricRows, "weight_kg"),
+    bodyFatPct: pickMetric(metricRows, "body_fat_pct"),
+    waistCm: pickMetric(metricRows, "waist_cm"),
+    leanMassKg: pickMetric(metricRows, "lean_mass_kg"),
     waterMl: pickMetric(metricRows, "water_ml"),
     mood: pickMetric(metricRows, "mood"),
     energy: pickMetric(metricRows, "energy"),

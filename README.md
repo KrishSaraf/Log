@@ -15,7 +15,7 @@ The exercise library is one module, not the whole product.
 
 ## Brand
 
-Charcoal surfaces + electric lime `#c6f135`. Syne (display) + Manrope (body).
+Charcoal surfaces + electric lime `#C6F135`. Syne (display) + Manrope (body).
 
 ## Dev
 

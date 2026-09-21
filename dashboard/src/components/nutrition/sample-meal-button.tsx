@@ -2,7 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CircleNotchIcon, SparkleIcon } from "@phosphor-icons/react";
+import {
+  CheckCircleIcon,
+  CircleNotchIcon,
+  SparkleIcon,
+} from "@phosphor-icons/react";
 
 import { todayIso } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -30,11 +34,13 @@ export function SampleMealButton({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onClick() {
     setBusy(true);
     setError(null);
+    setDone(false);
     try {
       const res = await fetch("/api/nutrition/save-meal", {
         method: "POST",
@@ -52,6 +58,7 @@ export function SampleMealButton({
         error?: string;
       } | null;
       if (!res.ok) throw new Error(data?.error || "Could not save sample.");
+      setDone(true);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
@@ -64,22 +71,33 @@ export function SampleMealButton({
     <div className="flex flex-col items-center gap-2">
       <button
         type="button"
-        disabled={busy}
+        disabled={busy || done}
         onClick={() => void onClick()}
         className={cn(
-          "inline-flex min-h-11 items-center gap-2 rounded-lg bg-lime px-4 text-sm font-medium text-on-lime",
-          "transition-opacity hover:opacity-90 disabled:opacity-50",
+          "inline-flex min-h-11 items-center gap-2 rounded-lg px-4 text-sm font-medium",
+          "transition-[opacity,transform,background-color] duration-200 hover:opacity-90 disabled:opacity-70",
+          "active:scale-[0.98]",
+          done
+            ? "border border-lime-line bg-lime-quiet text-lime"
+            : "bg-lime text-on-lime",
           className,
         )}
       >
         {busy ? (
           <CircleNotchIcon size={16} className="animate-spin" aria-hidden />
+        ) : done ? (
+          <CheckCircleIcon size={16} weight="fill" aria-hidden />
         ) : (
           <SparkleIcon size={16} weight="fill" aria-hidden />
         )}
-        {busy ? "Logging…" : label}
+        {busy ? "Logging…" : done ? "Sample lunch logged" : label}
       </button>
       {error ? <p className="text-xs text-negative">{error}</p> : null}
+      {done ? (
+        <p className="text-xs text-text-muted animate-[reveal-up_240ms_var(--ease-out-quint)_both]">
+          Rings will refresh with ~520 kcal · 42g protein.
+        </p>
+      ) : null}
     </div>
   );
 }

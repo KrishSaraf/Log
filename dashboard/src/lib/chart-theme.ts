@@ -6,7 +6,7 @@
  * the tokens in globals.css: if you change one, change both.
  */
 export const CHART_COLORS = {
-  lime: "#c6f135",
+  lime: "#C6F135",
   leaf: "#8fd14f",
   mist: "#a8b3a0",
   steel: "#6e8091",

@@ -58,13 +58,50 @@ struct LogSleepSheet: View {
     @State private var saving = false
     @State private var failed = false
 
+    private let presets: [(label: String, hours: Int, minutes: Int)] = [
+        ("6h", 6, 0),
+        ("7h", 7, 0),
+        ("7.5h", 7, 30),
+        ("8h", 8, 0),
+        ("9h", 9, 0),
+    ]
+
+    private let qualityLabels = ["Rough", "Fair", "OK", "Good", "Great"]
+
     var body: some View {
         NavigationStack {
             Form {
                 DatePicker("Night of", selection: $date, displayedComponents: .date)
+
+                Section("Quick duration") {
+                    HStack(spacing: 8) {
+                        ForEach(presets, id: \.label) { preset in
+                            let active = hours == preset.hours && minutes == preset.minutes
+                            Button(preset.label) {
+                                hours = preset.hours
+                                minutes = preset.minutes
+                            }
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(active ? Palette.onAccent : Palette.ink)
+                            .frame(maxWidth: .infinity, minHeight: 36)
+                            .background(
+                                active ? Palette.accent : Palette.surface,
+                                in: RoundedRectangle(cornerRadius: Palette.Radius.chip, style: .continuous)
+                            )
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                    .listRowBackground(Color.clear)
+                }
+
                 Stepper("Hours: \(hours)", value: $hours, in: 0...16)
                 Stepper("Minutes: \(minutes)", value: $minutes, in: 0...59)
-                Stepper("Quality: \(quality)/5", value: $quality, in: 1...5)
+                Stepper(
+                    "Quality: \(quality)/5 · \(qualityLabels[quality - 1])",
+                    value: $quality,
+                    in: 1...5
+                )
                 if failed {
                     Text("Couldn't reach the website. Check Settings → This phone.")
                         .font(.footnote)
@@ -80,7 +117,7 @@ struct LogSleepSheet: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(saving ? "Saving…" : "Save") { Task { await save() } }
+                    Button(saving ? "Saving…" : "Save sleep") { Task { await save() } }
                         .disabled(saving || (hours == 0 && minutes == 0))
                         .fontWeight(.semibold)
                 }

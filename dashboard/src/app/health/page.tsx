@@ -4,7 +4,6 @@ import {
   DropIcon,
   HeartbeatIcon,
   MoonIcon,
-  PulseIcon,
   ScalesIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
@@ -131,17 +130,18 @@ export default async function HealthPage() {
         />
       </div>
 
-      <Panel>
+      <Panel id="log-vitals" className="scroll-mt-24">
         <PanelHeader>
           <div className="min-w-0">
             <PanelTitle>Log a reading</PanelTitle>
             <PanelDescription>
-              Manual entries write to the same tables connected sources use.
+              Body, sleep, water, heart, mood — same tables connected sources use.
             </PanelDescription>
           </div>
         </PanelHeader>
         <PanelBody>
           <QuickLog
+            id="quick-log"
             defaults={{
               weightKg: data.latestWeight?.kg ?? null,
               waterMl: latestWater?.value ?? null,
@@ -254,7 +254,15 @@ export default async function HealthPage() {
             <EmptyState
               icon={ScalesIcon}
               title="No weigh-ins yet"
-              description="Log weight from Today or the form above."
+              description="Log weight, body fat, waist, or lean mass from the form above."
+              action={
+                <a
+                  href="#quick-log"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+                >
+                  Log body metrics
+                </a>
+              }
             />
           ) : (
             <ul className="max-h-[36rem] divide-y divide-line overflow-auto">
@@ -283,9 +291,17 @@ export default async function HealthPage() {
         <PanelBody flush>
           {sleepRows.length === 0 ? (
             <EmptyState
-              icon={PulseIcon}
+              icon={MoonIcon}
               title="No sleep logged"
-              description="Log last night from Today — hours, minutes, and quality."
+              description="Log last night — duration presets and a 1–5 quality score."
+              action={
+                <a
+                  href="#quick-log"
+                  className="inline-flex min-h-11 items-center rounded-lg border border-lime-line bg-lime-quiet px-4 text-sm font-medium text-lime transition-opacity hover:opacity-90"
+                >
+                  Log sleep
+                </a>
+              }
             />
           ) : (
             <ul className="max-h-[24rem] divide-y divide-line overflow-auto">

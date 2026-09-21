@@ -146,13 +146,14 @@ function ConnectionGroup({
     <div className="space-y-3">
       <p className="label-caps px-1">{title}</p>
       <ul className="grid gap-3 sm:grid-cols-2">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <ConnectionCard
             key={item.provider}
             item={item}
             busy={busy === item.provider}
             muted={muted}
             onStatus={onStatus}
+            style={{ animationDelay: `${index * 50}ms` }}
           />
         ))}
       </ul>
@@ -165,6 +166,7 @@ function ConnectionCard({
   busy,
   muted,
   onStatus,
+  style,
 }: {
   item: ConnectionView;
   busy: boolean;
@@ -173,15 +175,19 @@ function ConnectionCard({
     provider: ConnectionView["provider"],
     status: ConnectionView["status"],
   ) => void;
+  style?: React.CSSProperties;
 }) {
   const Icon = PROVIDER_ICON[item.provider] ?? PlugsConnectedIcon;
   const connected = item.status === "connected";
 
   return (
     <li
+      style={style}
       className={cn(
         "flex flex-col gap-4 rounded-xl border border-line bg-surface-raised/40 p-4",
-        "transition-[border-color,background-color] duration-200",
+        "transition-[border-color,background-color,transform] duration-200",
+        "animate-[reveal-up_320ms_var(--ease-out-quint)_both]",
+        "hover:-translate-y-0.5 hover:border-lime-line/70",
         connected && "border-lime-line bg-lime-quiet/40",
         muted && !connected && "opacity-90",
       )}

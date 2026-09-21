@@ -245,20 +245,38 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 />
               </ul>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link
-                href="/nutrition"
-                className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
-              >
-                Snap a meal
-              </Link>
-              <Link
-                href="/nutrition"
-                className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
-              >
-                Full nutrition
-              </Link>
-            </div>
+            {nutrition.mealsToday === 0 ? (
+              <div className="mt-5 space-y-3 border-t border-line pt-4">
+                <p className="text-xs leading-relaxed text-text-muted">
+                  Nothing on the plate yet — try a sample lunch to wake the
+                  rings, or snap a real meal.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <SampleMealButton />
+                  <Link
+                    href="/nutrition"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                  >
+                    Snap a meal
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link
+                  href="/nutrition"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+                >
+                  Snap a meal
+                </Link>
+                <Link
+                  href="/nutrition"
+                  className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                >
+                  Full nutrition
+                </Link>
+              </div>
+            )}
           </PanelBody>
         </Panel>
       </section>
@@ -272,25 +290,35 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           value={metrics.steps !== null ? Math.round(metrics.steps) : null}
           icon={PulseIcon}
         />
-        <MetricCard
-          label="Sleep"
-          value={
-            metrics.sleepMinutes !== null
-              ? formatDuration(metrics.sleepMinutes)
-              : null
-          }
-          icon={MoonIcon}
-        />
-        <MetricCard
-          label="Water"
-          value={
-            metrics.waterMl !== null
-              ? (metrics.waterMl / 1000).toFixed(1)
-              : null
-          }
-          unit="L"
-          icon={DropIcon}
-        />
+        <a href="#quick-log" className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <MetricCard
+            label="Sleep"
+            value={
+              metrics.sleepMinutes !== null
+                ? formatDuration(metrics.sleepMinutes)
+                : null
+            }
+            icon={MoonIcon}
+            footnote={
+              metrics.sleepMinutes === null ? "Tap to log last night" : undefined
+            }
+            className="h-full"
+          />
+        </a>
+        <a href="#quick-log" className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <MetricCard
+            label="Water"
+            value={
+              metrics.waterMl !== null
+                ? (metrics.waterMl / 1000).toFixed(1)
+                : null
+            }
+            unit="L"
+            icon={DropIcon}
+            footnote={metrics.waterMl === null ? "Tap to log glasses" : undefined}
+            className="h-full"
+          />
+        </a>
         <MetricCard
           label="Resting HR"
           value={
@@ -301,10 +329,28 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           unit="bpm"
           icon={HeartbeatIcon}
         />
+        <a href="#quick-log" className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <MetricCard
+            label="Weight"
+            value={
+              metrics.weightKg !== null ? formatKg(metrics.weightKg) : null
+            }
+            unit="kg"
+            icon={ScalesIcon}
+            footnote={
+              metrics.weightKg === null ? "Tap to log body metrics" : undefined
+            }
+            className="h-full"
+          />
+        </a>
         <MetricCard
-          label="Weight"
-          value={metrics.weightKg !== null ? formatKg(metrics.weightKg) : null}
-          unit="kg"
+          label="Body fat"
+          value={
+            metrics.bodyFatPct !== null
+              ? Math.round(metrics.bodyFatPct * 10) / 10
+              : null
+          }
+          unit="%"
           icon={ScalesIcon}
         />
         <MetricCard
@@ -462,19 +508,23 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
         </PanelBody>
       </Panel>
 
-      <Panel className="reveal reveal-delay-4">
+      <Panel id="log-vitals" className="reveal reveal-delay-4 scroll-mt-24">
         <PanelHeader>
           <div className="min-w-0">
             <PanelTitle>Log vitals</PanelTitle>
             <PanelDescription>
-              Weight, sleep, water, heart, mood — into health_metrics
+              Body, sleep, water, heart, mood — into health_metrics
             </PanelDescription>
           </div>
         </PanelHeader>
         <PanelBody>
           <QuickLog
+            id="quick-log"
             defaults={{
               weightKg: metrics.weightKg,
+              bodyFatPct: metrics.bodyFatPct,
+              waistCm: metrics.waistCm,
+              leanMassKg: metrics.leanMassKg,
               waterMl: metrics.waterMl,
               restingHeartRate: metrics.restingHeartRate,
               bpSystolic: metrics.bpSystolic,
@@ -501,6 +551,17 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 icon={PulseIcon}
                 title="Nothing logged yet"
                 description="Sessions, meals, and sleep nights will show up here."
+                action={
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <SampleMealButton label="Try a sample lunch" />
+                    <a
+                      href="#quick-log"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                    >
+                      Log sleep
+                    </a>
+                  </div>
+                }
               />
             ) : (
               <ul className="divide-y divide-line">

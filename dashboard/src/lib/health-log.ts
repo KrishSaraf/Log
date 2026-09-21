@@ -25,6 +25,8 @@ export const METRIC_UNITS: Partial<Record<string, string>> = {
   mood: "1-5",
   energy: "1-5",
   body_fat_pct: "%",
+  waist_cm: "cm",
+  lean_mass_kg: "kg",
 };
 
 export type MetricPoint = {

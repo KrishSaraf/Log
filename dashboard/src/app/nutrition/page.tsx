@@ -33,6 +33,7 @@ export default async function NutritionPage() {
   return (
     <div className="space-y-8">
       <PageHeader
+        eyebrow="Fuel"
         title="Nutrition"
         description="Snap a plate or log macros by hand — same meals table either way."
       />
@@ -134,7 +135,11 @@ export default async function NutritionPage() {
               icon={ForkKnifeIcon}
               title="No meals yet"
               description="Take a photo, log macros, or drop in a sample lunch to see rings fill."
-              action={<SampleMealButton />}
+              action={
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <SampleMealButton />
+                </div>
+              }
             />
           ) : (
             <RecentMealList

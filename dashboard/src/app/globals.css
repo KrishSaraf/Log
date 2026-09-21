@@ -28,7 +28,7 @@
   --text-muted: #9a9aa3;
   --text-faint: #65656e;
 
-  /* The single accent: electric lime on charcoal (aligned with design-tokens). */
+  /* The single accent: electric lime #C6F135 on charcoal. */
   --lime: #c6f135;
   --lime-bright: #d4f85a;
   --lime-quiet: oklch(0.88 0.2 125 / 14%);
@@ -165,6 +165,7 @@
     @apply font-sans;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
   }
 
   body {
