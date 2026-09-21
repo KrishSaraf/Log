@@ -21,20 +21,20 @@ export default async function ConnectionsPage() {
       <PageHeader
         eyebrow="Integrations"
         title="Connections"
-        description="Apple Health on iPhone today. Health Connect and Google Fit stay ready for Android — same hub tables either way."
+        description="One hub for every source — Apple Health live on iPhone, Health Connect and Google Fit stubbed for Android."
       />
 
-      <Panel>
+      <Panel className="overflow-hidden">
         <PanelHeader>
           <div className="min-w-0">
             <PanelTitle>Data sources</PanelTitle>
             <PanelDescription>
-              Apple Health is live on iOS. Health Connect and Google Fit are
-              wired as placeholders until the Android client lands.
+              Enable a source to claim it on your account. Native sync follows
+              from the phone clients into the same health_metrics tables.
             </PanelDescription>
           </div>
         </PanelHeader>
-        <PanelBody flush>
+        <PanelBody>
           <ConnectionsPanel initial={connections} />
         </PanelBody>
       </Panel>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -8,20 +9,81 @@ import {
   View,
   ScrollView,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setBaseUrl } from "@workspace/api-client-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useWorkout } from "@/hooks/useWorkout";
 import { resolveApiBaseUrl } from "@/lib/api";
 import { colors, radii, space, type } from "@/theme/tokens";
 
+type StubConnection = {
+  id: string;
+  name: string;
+  detail: string;
+  platform: "ios" | "android" | "any";
+};
+
+const STUB_KEY = "log.connections.stubs";
+
+const CATALOG: StubConnection[] = [
+  {
+    id: "apple_health",
+    name: "Apple Health",
+    detail: "HealthKit sync lives in the native iOS Log app",
+    platform: "ios",
+  },
+  {
+    id: "health_connect",
+    name: "Health Connect",
+    detail: "Android vitals stub — native read coming soon",
+    platform: "android",
+  },
+  {
+    id: "google_fit",
+    name: "Google Fit",
+    detail: "Legacy Fit streams · placeholder until Health Connect ships",
+    platform: "android",
+  },
+];
+
+function visibleCatalog(): StubConnection[] {
+  if (Platform.OS === "android") {
+    return CATALOG.filter((c) => c.platform === "android" || c.platform === "any");
+  }
+  if (Platform.OS === "ios") {
+    return CATALOG.filter((c) => c.platform === "ios" || c.platform === "any");
+  }
+  return CATALOG;
+}
+
 export default function SettingsScreen() {
   const { settings, updateSettings } = useWorkout();
   const [rest, setRest] = useState(String(settings.restSeconds));
   const [apiUrl, setApiUrl] = useState(settings.apiBaseUrl || resolveApiBaseUrl());
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setRest(String(settings.restSeconds));
   }, [settings.restSeconds]);
+
+  useEffect(() => {
+    void AsyncStorage.getItem(STUB_KEY).then((raw) => {
+      if (!raw) return;
+      try {
+        setEnabled(JSON.parse(raw) as Record<string, boolean>);
+      } catch {
+        /* ignore */
+      }
+    });
+  }, []);
+
+  async function toggleStub(id: string) {
+    const next = { ...enabled, [id]: !enabled[id] };
+    setEnabled(next);
+    await AsyncStorage.setItem(STUB_KEY, JSON.stringify(next));
+  }
+
+  const connections = visibleCatalog();
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -29,6 +91,37 @@ export default function SettingsScreen() {
       <Text style={styles.sub}>
         Charcoal + lime — same tokens as web Today and iOS. Hub auth sync lands next.
       </Text>
+
+      <Text style={styles.section}>Connections</Text>
+      <Text style={styles.sectionHint}>
+        {Platform.OS === "android"
+          ? "Health Connect stubs on this device. Enabling marks intent — no data leaves the phone yet."
+          : Platform.OS === "ios"
+            ? "Use the native Log app for live HealthKit. Stubs here stay local."
+            : "Platform stubs for planning — enable to mark intent on this device."}
+      </Text>
+      <View style={styles.connList}>
+        {connections.map((item) => {
+          const on = !!enabled[item.id];
+          return (
+            <Pressable
+              key={item.id}
+              onPress={() => void toggleStub(item.id)}
+              style={[styles.connRow, on && styles.connRowOn]}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.connName}>{item.name}</Text>
+                <Text style={styles.connDetail}>{item.detail}</Text>
+              </View>
+              <View style={[styles.badge, on && styles.badgeOn]}>
+                <Text style={[styles.badgeText, on && styles.badgeTextOn]}>
+                  {on ? "Enabled" : "Stub"}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
 
       <Text style={styles.label}>Rest timer (seconds)</Text>
       <TextInput
@@ -89,7 +182,7 @@ export default function SettingsScreen() {
       <View style={styles.tokenCard}>
         <Text style={styles.tokenTitle}>Brand tokens</Text>
         <Text style={styles.tokenLine}>accent #C6F135 · bg #0A0A0B · card #141416</Text>
-        <Text style={styles.tokenLine}>radius 12 · Outfit + Inter (match lyfta-exercises)</Text>
+        <Text style={styles.tokenLine}>radius 12 · Outfit + Inter</Text>
       </View>
     </ScrollView>
   );
@@ -107,8 +200,69 @@ const styles = StyleSheet.create({
     fontFamily: type.body,
     fontSize: 14,
     color: colors.mutedForeground,
-    marginBottom: space.lg,
+    marginBottom: space.md,
     lineHeight: 20,
+  },
+  section: {
+    fontFamily: type.displaySemi,
+    fontSize: 18,
+    color: colors.foreground,
+    marginTop: space.sm,
+  },
+  sectionHint: {
+    fontFamily: type.body,
+    fontSize: 13,
+    color: colors.mutedForeground,
+    lineHeight: 18,
+    marginBottom: space.sm,
+  },
+  connList: { gap: space.sm, marginBottom: space.md },
+  connRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    minHeight: 72,
+  },
+  connRowOn: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
+  },
+  connName: {
+    fontFamily: type.bodySemi,
+    fontSize: 16,
+    color: colors.foreground,
+  },
+  connDetail: {
+    fontFamily: type.body,
+    fontSize: 12,
+    color: colors.mutedForeground,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radii.sm,
+    backgroundColor: colors.muted,
+  },
+  badgeOn: {
+    backgroundColor: colors.primary,
+  },
+  badgeText: {
+    fontFamily: type.bodyMed,
+    fontSize: 11,
+    color: colors.mutedForeground,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  badgeTextOn: {
+    color: colors.onPrimary,
   },
   label: {
     fontFamily: type.bodySemi,

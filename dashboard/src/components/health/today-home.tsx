@@ -18,6 +18,7 @@ import { QuickLog } from "@/components/health/quick-log";
 import { ManualMealLogger } from "@/components/nutrition/manual-meal-logger";
 import { NutritionRings } from "@/components/nutrition/nutrition-rings";
 import { RecentMealList } from "@/components/nutrition/recent-meal-list";
+import { SampleMealButton } from "@/components/nutrition/sample-meal-button";
 import {
   EmptyState,
   MetricCard,
@@ -36,6 +37,13 @@ import {
 import { NUTRITION_GOALS } from "@/lib/nutrition";
 import type { TodaySummary } from "@/lib/today";
 import { cn } from "@/lib/utils";
+
+const PROVIDER_LABEL: Record<TodaySummary["connections"][number]["provider"], string> = {
+  apple_health: "Apple Health",
+  health_connect: "Health Connect",
+  google_fit: "Google Fit",
+  manual_import: "Import",
+};
 
 const SHORTCUTS = [
   {
@@ -91,13 +99,15 @@ function greetingForHour(hour: number) {
 }
 
 export function TodayHome({ summary }: { summary: TodaySummary }) {
-  const { metrics, rings, recent, connectedCount, nutrition } = summary;
+  const { metrics, rings, recent, connectedCount, nutrition, connections } =
+    summary;
   const hasActivity =
     metrics.activeCalories !== null ||
     metrics.exerciseMinutes !== null ||
     metrics.standHours !== null;
   const hour = new Date().getHours();
   const greeting = greetingForHour(hour);
+  const connectedSources = connections.filter((c) => c.status === "connected");
 
   const bp =
     metrics.bpSystolic != null && metrics.bpDiastolic != null
@@ -105,10 +115,17 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
       : null;
 
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-8 right-0 left-0 -z-10 h-56 bg-[radial-gradient(ellipse_at_top,rgba(198,241,53,0.09),transparent_65%)]"
+      />
+
       <header className="reveal space-y-2">
         <p className="label-caps text-lime">{greeting}</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-text sm:text-4xl">
+          <span className="text-lime">Log</span>
+          <span className="mx-2.5 text-text-faint/50">·</span>
           Today
         </h1>
         <p className="text-sm text-text-muted">{formatLongDate(summary.date)}</p>
@@ -190,11 +207,13 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           </PanelHeader>
           <PanelBody>
             <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
-              <NutritionRings
-                calories={nutrition.rings.calories}
-                protein={nutrition.rings.protein}
-                size={148}
-              />
+              <div className="ring-glow">
+                <NutritionRings
+                  calories={nutrition.rings.calories}
+                  protein={nutrition.rings.protein}
+                  size={148}
+                />
+              </div>
               <ul className="w-full min-w-0 space-y-3 text-sm">
                 <RingStat
                   label="Calories"
@@ -362,7 +381,7 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           </PanelBody>
         </Panel>
 
-        <Panel className="lg:col-span-5">
+        <Panel className="lg:col-span-5 overflow-hidden">
           <PanelHeader>
             <div className="min-w-0">
               <PanelTitle>Sources</PanelTitle>
@@ -374,15 +393,30 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             </div>
           </PanelHeader>
           <PanelBody>
-            <p className="text-sm leading-relaxed text-text-muted">
-              Pull activity, vitals, and sleep from Apple Health, Health
-              Connect, or Google Fit.
-            </p>
+            {connectedSources.length > 0 ? (
+              <ul className="mb-4 flex flex-wrap gap-2">
+                {connectedSources.map((c) => (
+                  <li
+                    key={c.provider}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-lime-line bg-lime-quiet px-2.5 py-1.5 text-xs font-medium text-lime"
+                  >
+                    <span className="size-1.5 rounded-full bg-lime" aria-hidden />
+                    {PROVIDER_LABEL[c.provider]}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mb-4 text-sm leading-relaxed text-text-muted">
+                Pull activity, vitals, and sleep from Apple Health, Health
+                Connect, or Google Fit.
+              </p>
+            )}
             <Link
               href="/settings/connections"
-              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
             >
-              Manage connections
+              <PlugsConnectedIcon size={16} weight="bold" aria-hidden />
+              {connectedCount === 0 ? "Connect a source" : "Manage connections"}
             </Link>
           </PanelBody>
         </Panel>
@@ -400,14 +434,17 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             <EmptyState
               icon={ForkKnifeIcon}
               title="No meals yet"
-              description="Snap a plate or log macros — both use the dashboard nutrition model."
+              description="Snap a plate, log macros, or try a sample lunch to wake the rings."
               action={
-                <Link
-                  href="/nutrition"
-                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime"
-                >
-                  Open nutrition
-                </Link>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <SampleMealButton />
+                  <Link
+                    href="/nutrition"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                  >
+                    Open nutrition
+                  </Link>
+                </div>
               }
             />
           ) : (

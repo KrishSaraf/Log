@@ -2,11 +2,16 @@
 
 import * as React from "react";
 import {
+  AndroidLogoIcon,
+  AppleLogoIcon,
   CheckCircleIcon,
   CircleNotchIcon,
+  FileArrowUpIcon,
+  HeartbeatIcon,
   PlugsConnectedIcon,
   WarningCircleIcon,
 } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
 
 import type { ConnectionView } from "@/lib/connections";
 import { cn } from "@/lib/utils";
@@ -16,6 +21,13 @@ const STATUS_LABEL: Record<ConnectionView["status"], string> = {
   pending: "Connecting…",
   connected: "Connected",
   error: "Needs attention",
+};
+
+const PROVIDER_ICON: Record<ConnectionView["provider"], Icon> = {
+  apple_health: AppleLogoIcon,
+  health_connect: HeartbeatIcon,
+  google_fit: AndroidLogoIcon,
+  manual_import: FileArrowUpIcon,
 };
 
 export function ConnectionsPanel({
@@ -60,10 +72,23 @@ export function ConnectionsPanel({
             : item,
         ),
       );
-      if (status === "connected" && !items.find((i) => i.provider === provider)?.hookAvailable) {
-        setNotice(
-          "Marked connected for planning — native sync for this source ships with the mobile client.",
-        );
+      if (status === "connected") {
+        const catalog = items.find((i) => i.provider === provider);
+        if (catalog?.comingSoon) {
+          setNotice(
+            `${catalog.name} is marked ready on your account — native Android sync ships with the Expo client.`,
+          );
+        } else if (provider === "apple_health") {
+          setNotice(
+            "Apple Health is marked connected. Open Log on iPhone to sync rings into Today.",
+          );
+        } else if (!catalog?.hookAvailable) {
+          setNotice(
+            "Marked connected for planning — native sync for this source ships with the mobile client.",
+          );
+        } else {
+          setNotice("Connection saved.");
+        }
       }
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Update failed.");
@@ -72,86 +97,170 @@ export function ConnectionsPanel({
     }
   }
 
+  const live = items.filter((i) => !i.comingSoon);
+  const soon = items.filter((i) => i.comingSoon);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {notice ? (
-        <p className="rounded-lg border border-lime-line bg-lime-quiet px-3 py-2 text-sm text-text">
+        <p
+          role="status"
+          className="rounded-lg border border-lime-line bg-lime-quiet px-3 py-2.5 text-sm text-text animate-[reveal-up_280ms_var(--ease-out-quint)_both]"
+        >
           {notice}
         </p>
       ) : null}
 
-      <ul className="divide-y divide-line">
-        {items.map((item) => {
-          const isBusy = busy === item.provider;
-          const connected = item.status === "connected";
-          return (
-            <li
-              key={item.provider}
-              className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium text-text">{item.name}</p>
-                  <StatusPill status={item.status} />
-                  {item.comingSoon ? (
-                    <span className="rounded-md border border-line px-1.5 py-0.5 text-[10px] tracking-wide text-text-faint uppercase">
-                      Coming soon
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-1 text-sm text-text-muted">{item.description}</p>
-                <p className="mt-1 text-xs text-text-faint">
-                  {item.platform === "ios"
-                    ? "Best on iPhone via HealthKit"
-                    : item.platform === "android"
-                      ? "Android"
-                      : "Any device"}
-                  {item.lastSyncAt
-                    ? ` · Last sync ${new Date(item.lastSyncAt).toLocaleString()}`
-                    : ""}
-                </p>
-                {item.lastError ? (
-                  <p className="mt-1 flex items-center gap-1 text-xs text-negative">
-                    <WarningCircleIcon size={12} aria-hidden />
-                    {item.lastError}
-                  </p>
-                ) : null}
-              </div>
+      <ConnectionGroup title="Available now" items={live} busy={busy} onStatus={setStatus} />
+      {soon.length > 0 ? (
+        <ConnectionGroup
+          title="Coming soon"
+          items={soon}
+          busy={busy}
+          onStatus={setStatus}
+          muted
+        />
+      ) : null}
+    </div>
+  );
+}
 
-              <div className="flex shrink-0 items-center gap-2">
-                {connected ? (
-                  <button
-                    type="button"
-                    disabled={isBusy}
-                    onClick={() => setStatus(item.provider, "disconnected")}
-                    className="min-h-11 rounded-lg border border-line px-3 text-sm text-text-muted transition-colors hover:text-text disabled:opacity-50"
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={isBusy}
-                    onClick={() => setStatus(item.provider, "connected")}
-                    className={cn(
-                      "inline-flex min-h-11 items-center gap-2 rounded-lg bg-lime px-3 text-sm font-medium text-on-lime",
-                      "transition-opacity hover:opacity-90 disabled:opacity-50",
-                    )}
-                  >
-                    {isBusy ? (
-                      <CircleNotchIcon size={16} className="animate-spin" aria-hidden />
-                    ) : (
-                      <PlugsConnectedIcon size={16} weight="bold" aria-hidden />
-                    )}
-                    {item.hookAvailable ? "Connect" : "Enable placeholder"}
-                  </button>
-                )}
-              </div>
-            </li>
-          );
-        })}
+function ConnectionGroup({
+  title,
+  items,
+  busy,
+  onStatus,
+  muted = false,
+}: {
+  title: string;
+  items: ConnectionView[];
+  busy: string | null;
+  onStatus: (
+    provider: ConnectionView["provider"],
+    status: ConnectionView["status"],
+  ) => void;
+  muted?: boolean;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      <p className="label-caps px-1">{title}</p>
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {items.map((item) => (
+          <ConnectionCard
+            key={item.provider}
+            item={item}
+            busy={busy === item.provider}
+            muted={muted}
+            onStatus={onStatus}
+          />
+        ))}
       </ul>
     </div>
+  );
+}
+
+function ConnectionCard({
+  item,
+  busy,
+  muted,
+  onStatus,
+}: {
+  item: ConnectionView;
+  busy: boolean;
+  muted: boolean;
+  onStatus: (
+    provider: ConnectionView["provider"],
+    status: ConnectionView["status"],
+  ) => void;
+}) {
+  const Icon = PROVIDER_ICON[item.provider] ?? PlugsConnectedIcon;
+  const connected = item.status === "connected";
+
+  return (
+    <li
+      className={cn(
+        "flex flex-col gap-4 rounded-xl border border-line bg-surface-raised/40 p-4",
+        "transition-[border-color,background-color] duration-200",
+        connected && "border-lime-line bg-lime-quiet/40",
+        muted && !connected && "opacity-90",
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-lg border",
+            connected
+              ? "border-lime-line bg-lime text-on-lime"
+              : "border-line bg-surface text-text-muted",
+          )}
+        >
+          <Icon size={18} weight={connected ? "fill" : "duotone"} aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium text-text">{item.name}</p>
+            <StatusPill status={item.status} />
+          </div>
+          <p className="mt-1 text-sm leading-relaxed text-text-muted">
+            {item.description}
+          </p>
+          <p className="mt-2 text-xs text-text-faint">
+            {item.platform === "ios"
+              ? "Best on iPhone via HealthKit"
+              : item.platform === "android"
+                ? "Android · Health Connect path"
+                : "Any device"}
+            {item.lastSyncAt
+              ? ` · Last sync ${new Date(item.lastSyncAt).toLocaleString()}`
+              : ""}
+          </p>
+          {item.lastError ? (
+            <p className="mt-1.5 flex items-center gap-1 text-xs text-negative">
+              <WarningCircleIcon size={12} aria-hidden />
+              {item.lastError}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {connected ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onStatus(item.provider, "disconnected")}
+            className="min-h-11 rounded-lg border border-line px-3 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text disabled:opacity-50"
+          >
+            Disconnect
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onStatus(item.provider, "connected")}
+            className={cn(
+              "inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium",
+              "transition-opacity hover:opacity-90 disabled:opacity-50",
+              item.comingSoon
+                ? "border border-lime-line bg-transparent text-lime"
+                : "bg-lime text-on-lime",
+            )}
+          >
+            {busy ? (
+              <CircleNotchIcon size={16} className="animate-spin" aria-hidden />
+            ) : (
+              <PlugsConnectedIcon size={16} weight="bold" aria-hidden />
+            )}
+            {item.comingSoon
+              ? "Enable stub"
+              : item.hookAvailable
+                ? "Connect"
+                : "Enable placeholder"}
+          </button>
+        )}
+      </div>
+    </li>
   );
 }
 
@@ -166,7 +275,7 @@ function StatusPill({ status }: { status: ConnectionView["status"] }) {
           ? "bg-lime-quiet text-lime"
           : errored
             ? "bg-negative/15 text-negative"
-            : "bg-surface-raised text-text-faint",
+            : "bg-surface text-text-faint",
       )}
     >
       {connected ? <CheckCircleIcon size={11} weight="fill" aria-hidden /> : null}

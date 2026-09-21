@@ -6,6 +6,7 @@ import { FoodPhotoLogger } from "@/components/nutrition/food-photo-logger";
 import { ManualMealLogger } from "@/components/nutrition/manual-meal-logger";
 import { NutritionRings } from "@/components/nutrition/nutrition-rings";
 import { RecentMealList } from "@/components/nutrition/recent-meal-list";
+import { SampleMealButton } from "@/components/nutrition/sample-meal-button";
 import {
   EmptyState,
   MetricCard,
@@ -49,11 +50,13 @@ export default async function NutritionPage() {
           </PanelHeader>
           <PanelBody>
             <div className="flex items-center gap-5">
-              <NutritionRings
-                calories={nutrition.rings.calories}
-                protein={nutrition.rings.protein}
-                size={112}
-              />
+              <div className="ring-glow">
+                <NutritionRings
+                  calories={nutrition.rings.calories}
+                  protein={nutrition.rings.protein}
+                  size={112}
+                />
+              </div>
               <ul className="min-w-0 space-y-2 text-sm">
                 <li className="flex justify-between gap-3">
                   <span className="text-lime">Calories</span>
@@ -130,7 +133,8 @@ export default async function NutritionPage() {
             <EmptyState
               icon={ForkKnifeIcon}
               title="No meals yet"
-              description="Take a photo or log macros — both land in the same list."
+              description="Take a photo, log macros, or drop in a sample lunch to see rings fill."
+              action={<SampleMealButton />}
             />
           ) : (
             <RecentMealList
