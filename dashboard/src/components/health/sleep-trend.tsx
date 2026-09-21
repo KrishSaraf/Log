@@ -14,11 +14,11 @@ export type SleepTrendPoint = {
   quality: number | null;
 };
 
-function qualityFill(quality: number | null): string {
-  if (quality == null) return "url(#barGlow)";
+function qualityFill(quality: number | null): string | undefined {
+  if (quality == null) return undefined; // chart uses lime glow gradient
   if (quality <= 2) return CHART_COLORS.steel;
   if (quality === 3) return CHART_COLORS.leaf;
-  return "url(#barGlow)";
+  return undefined;
 }
 
 function qualityLabel(quality: number | null): string {

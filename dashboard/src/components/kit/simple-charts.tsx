@@ -39,6 +39,7 @@ export function SimpleLineChart({
   stroke?: string;
 }) {
   const [hover, setHover] = React.useState<HoverState>(null);
+  const gradId = React.useId().replace(/:/g, "");
   const pad = { top: 16, right: 12, bottom: 28, left: 40 };
   const width = 560;
   const innerW = width - pad.left - pad.right;
@@ -82,7 +83,7 @@ export function SimpleLineChart({
         onMouseLeave={() => setHover(null)}
       >
         <defs>
-          <linearGradient id="lineWash" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={`lineWash-${gradId}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={stroke} stopOpacity={0.28} />
             <stop offset="100%" stopColor={stroke} stopOpacity={0} />
           </linearGradient>
@@ -130,7 +131,7 @@ export function SimpleLineChart({
           ) : null,
         )}
 
-        {areaPath ? <path d={areaPath} fill="url(#lineWash)" /> : null}
+        {areaPath ? <path d={areaPath} fill={`url(#lineWash-${gradId})`} /> : null}
         {linePath ? (
           <path
             d={linePath}
@@ -285,6 +286,7 @@ export function SimpleBarChart({
   defaultFill?: string;
 }) {
   const [hover, setHover] = React.useState<number | null>(null);
+  const gradId = React.useId().replace(/:/g, "");
   const pad = { top: 14, right: 10, bottom: 28, left: 36 };
   const width = 560;
   const innerW = width - pad.left - pad.right;
@@ -314,7 +316,7 @@ export function SimpleBarChart({
         onMouseLeave={() => setHover(null)}
       >
         <defs>
-          <linearGradient id="barGlow" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={`barGlow-${gradId}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={CHART_COLORS.lime} stopOpacity={0.95} />
             <stop offset="100%" stopColor={CHART_COLORS.lime} stopOpacity={0.5} />
           </linearGradient>
@@ -372,7 +374,11 @@ export function SimpleBarChart({
                 height={h}
                 rx={5}
                 ry={5}
-                fill={p.fill ?? "url(#barGlow)"}
+                fill={
+                  p.fill === "url(#barGlow)"
+                    ? `url(#barGlow-${gradId})`
+                    : (p.fill ?? `url(#barGlow-${gradId})`)
+                }
                 opacity={active ? 1 : 0.92}
                 className="transition-opacity duration-150"
                 onMouseEnter={() => setHover(i)}
