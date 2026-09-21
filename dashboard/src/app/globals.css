@@ -28,25 +28,31 @@
   --text-muted: #9a9aa3;
   --text-faint: #65656e;
 
-  /* The single accent: electric lime on charcoal. */
-  --lime: #c6ff00;
-  --lime-bright: #d9ff4a;
-  --lime-quiet: oklch(0.9 0.24 125 / 14%);
-  --lime-line: oklch(0.9 0.24 125 / 34%);
-  --on-lime: #0a0a0b;
+  /* The single accent: electric lime on charcoal (aligned with design-tokens). */
+  --lime: #c6f135;
+  --lime-bright: #d4f85a;
+  --lime-quiet: oklch(0.88 0.2 125 / 14%);
+  --lime-line: oklch(0.88 0.2 125 / 34%);
+  --on-lime: #0a0c08;
 
   /* Direction of travel for a metric. Deliberately muted so they never
      out-shout the lime accent. */
-  --positive: #5fbf8c;
-  --negative: #e2564b;
+  --positive: #3dd68c;
+  --negative: #ff5c5c;
 
   /* Chart series. Lime leads; companions stay cool charcoal-adjacent. */
-  --chart-1: #c6ff00;
+  --chart-1: #c6f135;
   --chart-2: #8fd14f;
   --chart-3: #a8b3a0;
   --chart-4: #6e8091;
   --chart-5: #4a4a52;
   --grid: oklch(1 0 0 / 6%);
+
+  /* Motion */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 180ms;
+  --duration-slow: 280ms;
+  --lime-glow: 0 0 40px rgba(198, 241, 53, 0.12);
 
   /* Corner radii. Three steps, one rule: controls md, panels lg, page-level
      surfaces xl, status pills full. */
@@ -133,7 +139,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
   --radius-sm: 0.375rem;
@@ -162,6 +169,17 @@
 
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(ellipse 90% 55% at 12% -10%, oklch(0.88 0.2 125 / 8%), transparent 55%),
+      radial-gradient(ellipse 70% 45% at 95% 5%, oklch(0.55 0.08 220 / 10%), transparent 50%),
+      linear-gradient(180deg, #0a0a0b 0%, #08080a 100%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
   }
 
   /* iOS Safari zooms focused inputs under 16px — keep forms readable without the jump. */
@@ -238,6 +256,38 @@
   .touch-target {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  .reveal {
+    animation: reveal-up var(--duration-slow) var(--ease-out-quint) both;
+  }
+
+  .reveal-delay-1 {
+    animation-delay: 60ms;
+  }
+  .reveal-delay-2 {
+    animation-delay: 120ms;
+  }
+  .reveal-delay-3 {
+    animation-delay: 180ms;
+  }
+  .reveal-delay-4 {
+    animation-delay: 240ms;
+  }
+
+  .ring-glow {
+    filter: drop-shadow(0 0 18px rgba(198, 241, 53, 0.22));
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

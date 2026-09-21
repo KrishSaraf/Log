@@ -32,9 +32,9 @@ enum Palette {
         dark: UIColor(white: 1, alpha: 0.14)
     )
 
-    /// Electric lime — the single accent across web + iOS.
-    static let accent = Color(red: 0.776, green: 1.0, blue: 0.0) // #c6ff00
-    static let onAccent = Color(red: 0.039, green: 0.039, blue: 0.043) // #0a0a0b
+    /// Electric lime — shared with web (`#c6f135`).
+    static let accent = Color(red: 0.776, green: 0.945, blue: 0.208) // #c6f135
+    static let onAccent = Color(red: 0.039, green: 0.047, blue: 0.031) // #0a0c08
     static let rust = accent
 
     static let move = accent

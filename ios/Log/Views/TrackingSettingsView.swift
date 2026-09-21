@@ -123,7 +123,12 @@ struct TrackingSettingsView: View {
             return
         }
         if health.access == .authorized { return }
-        Task { await health.requestAccess() }
+        Task {
+            await health.requestAccess()
+            if health.access == .authorized {
+                await HealthKitRemoteSync.pushSnapshot(health.snapshot, access: health.access)
+            }
+        }
     }
 
     private func connectionRow(

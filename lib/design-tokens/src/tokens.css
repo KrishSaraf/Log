@@ -1,0 +1,64 @@
+/**
+ * Shared Log design tokens — charcoal + electric lime.
+ * Used by exercise library and aligned with dashboard/iOS accents.
+ */
+:root {
+  /* Surfaces */
+  --kw-bg: #070809;
+  --kw-bg-elevated: #0e1012;
+  --kw-surface: #14171a;
+  --kw-surface-hover: #1a1e22;
+  --kw-ink: #f4f5f6;
+  --kw-ink-muted: #9aa3ad;
+  --kw-ink-faint: #5c6570;
+  --kw-border: rgba(255, 255, 255, 0.08);
+  --kw-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Accent — electric lime */
+  --kw-accent: #c6f135;
+  --kw-accent-hover: #d4f85a;
+  --kw-accent-muted: rgba(198, 241, 53, 0.14);
+  --kw-accent-ink: #0a0c08;
+
+  /* Semantic */
+  --kw-danger: #ff5c5c;
+  --kw-success: #3dd68c;
+  --kw-warning: #f5c542;
+
+  /* Type */
+  --kw-font-display: "Syne", system-ui, sans-serif;
+  --kw-font-body: "Manrope", system-ui, sans-serif;
+  --kw-text-xs: 0.75rem;
+  --kw-text-sm: 0.875rem;
+  --kw-text-base: 1rem;
+  --kw-text-lg: 1.125rem;
+  --kw-text-xl: 1.375rem;
+  --kw-text-2xl: 1.75rem;
+  --kw-text-3xl: 2.25rem;
+  --kw-text-hero: clamp(2.5rem, 6vw, 3.75rem);
+
+  /* Space & shape */
+  --kw-radius-sm: 0.5rem;
+  --kw-radius: 0.75rem;
+  --kw-radius-lg: 1rem;
+  --kw-radius-xl: 1.25rem;
+  --kw-space-1: 0.25rem;
+  --kw-space-2: 0.5rem;
+  --kw-space-3: 0.75rem;
+  --kw-space-4: 1rem;
+  --kw-space-5: 1.25rem;
+  --kw-space-6: 1.5rem;
+  --kw-space-8: 2rem;
+  --kw-space-10: 2.5rem;
+  --kw-space-12: 3rem;
+  --kw-tap: 2.75rem;
+
+  /* Motion */
+  --kw-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --kw-duration: 180ms;
+  --kw-duration-slow: 240ms;
+
+  /* Shadows */
+  --kw-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --kw-glow: 0 0 24px rgba(198, 241, 53, 0.18);
+}

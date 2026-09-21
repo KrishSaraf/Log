@@ -1,13 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Manrope, Syne } from "next/font/google";
 
 import { AuthProvider } from "@/components/shell/auth-provider";
 import { AppShell } from "@/components/shell/app-shell";
 import { ServiceWorkerRegister } from "@/components/shell/sw-register";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
   display: "swap",
 });
@@ -23,7 +29,8 @@ export const metadata: Metadata = {
     default: "Log",
     template: "%s · Log",
   },
-  description: "Your health home — activity, workouts, vitals, sleep, and nutrition.",
+  description:
+    "Your health home — activity, workouts, vitals, sleep, nutrition, and connections.",
   applicationName: "Log",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -59,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full`}
+      className={`dark ${manrope.variable} ${syne.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full antialiased">

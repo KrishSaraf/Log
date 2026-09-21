@@ -21,7 +21,6 @@ import { RecentMealList } from "@/components/nutrition/recent-meal-list";
 import {
   EmptyState,
   MetricCard,
-  PageHeader,
   Panel,
   PanelBody,
   PanelDescription,
@@ -53,8 +52,8 @@ const SHORTCUTS = [
   },
   {
     href: "/nutrition",
-    label: "Log meal",
-    description: "Nutrition",
+    label: "Snap a meal",
+    description: "Photo log",
     icon: ForkKnifeIcon,
   },
   {
@@ -83,12 +82,22 @@ const KIND_LABEL: Record<TodaySummary["recent"][number]["kind"], string> = {
   sleep: "Sleep",
 };
 
+function greetingForHour(hour: number) {
+  if (hour < 5) return "Still up";
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  if (hour < 21) return "Good evening";
+  return "Tonight";
+}
+
 export function TodayHome({ summary }: { summary: TodaySummary }) {
   const { metrics, rings, recent, connectedCount, nutrition } = summary;
-  const hasRings =
+  const hasActivity =
     metrics.activeCalories !== null ||
     metrics.exerciseMinutes !== null ||
     metrics.standHours !== null;
+  const hour = new Date().getHours();
+  const greeting = greetingForHour(hour);
 
   const bp =
     metrics.bpSystolic != null && metrics.bpDiastolic != null
@@ -97,29 +106,36 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Today"
-        description={formatLongDate(summary.date)}
-      />
+      <header className="reveal space-y-2">
+        <p className="label-caps text-lime">{greeting}</p>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-text sm:text-4xl">
+          Today
+        </h1>
+        <p className="text-sm text-text-muted">{formatLongDate(summary.date)}</p>
+      </header>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
-        <Panel className="lg:col-span-5">
+      {/* Hero: activity + nutrition as one composition */}
+      <section
+        aria-label="Today summary"
+        className="reveal reveal-delay-1 grid grid-cols-1 gap-4 lg:grid-cols-2"
+      >
+        <Panel className="overflow-hidden">
           <PanelHeader>
             <div className="min-w-0">
               <PanelTitle>Activity</PanelTitle>
-              <PanelDescription>
-                Move, exercise, and stand for the day.
-              </PanelDescription>
+              <PanelDescription>Move · Exercise · Stand</PanelDescription>
             </div>
           </PanelHeader>
           <PanelBody>
-            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
-              <ActivityRings
-                move={rings.move}
-                exercise={rings.exercise}
-                stand={rings.stand}
-                size={140}
-              />
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
+              <div className="ring-glow">
+                <ActivityRings
+                  move={rings.move}
+                  exercise={rings.exercise}
+                  stand={rings.stand}
+                  size={148}
+                />
+              </div>
               <ul className="w-full min-w-0 space-y-3 text-sm">
                 <RingStat
                   label="Move"
@@ -145,7 +161,7 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                   label="Stand"
                   value={
                     metrics.standHours !== null
-                      ? `${Math.round(metrics.standHours)}`
+                      ? `${Math.round(metrics.standHours * 10) / 10}`
                       : null
                   }
                   unit="hr"
@@ -153,127 +169,64 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 />
               </ul>
             </div>
-            {!hasRings ? (
+            {!hasActivity ? (
               <p className="mt-4 text-xs text-text-faint">
-                Connect Apple Health or Health Connect to fill these rings
-                automatically — or log manually below.
+                Connect Apple Health to fill these automatically — or log
+                vitals below.
               </p>
             ) : null}
           </PanelBody>
         </Panel>
 
-        <div className="grid grid-cols-2 gap-3 lg:col-span-7 sm:grid-cols-3">
-          <MetricCard
-            label="Steps"
-            value={metrics.steps !== null ? Math.round(metrics.steps) : null}
-            icon={PulseIcon}
-          />
-          <MetricCard
-            label="Sleep"
-            value={
-              metrics.sleepMinutes !== null
-                ? formatDuration(metrics.sleepMinutes)
-                : null
-            }
-            icon={MoonIcon}
-          />
-          <MetricCard
-            label="Water"
-            value={
-              metrics.waterMl !== null
-                ? (metrics.waterMl / 1000).toFixed(1)
-                : null
-            }
-            unit="L"
-            icon={DropIcon}
-          />
-          <MetricCard
-            label="Resting HR"
-            value={
-              metrics.restingHeartRate !== null
-                ? Math.round(metrics.restingHeartRate)
-                : null
-            }
-            unit="bpm"
-            icon={HeartbeatIcon}
-          />
-          <MetricCard
-            label="Weight"
-            value={metrics.weightKg !== null ? formatKg(metrics.weightKg) : null}
-            unit="kg"
-            icon={ScalesIcon}
-          />
-          <MetricCard
-            label="Blood pressure"
-            value={bp}
-            unit={bp ? "mmHg" : undefined}
-            icon={HeartbeatIcon}
-          />
-          <MetricCard
-            label="Mood"
-            value={metrics.mood !== null ? Math.round(metrics.mood) : null}
-            unit="/5"
-            icon={SmileyIcon}
-          />
-          <MetricCard
-            label="Energy"
-            value={metrics.energy !== null ? Math.round(metrics.energy) : null}
-            unit="/5"
-            icon={PulseIcon}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <Panel className="lg:col-span-5">
+        <Panel className="overflow-hidden">
           <PanelHeader>
             <div className="min-w-0">
               <PanelTitle>Nutrition</PanelTitle>
               <PanelDescription>
                 Soft targets {NUTRITION_GOALS.calories} kcal ·{" "}
-                {NUTRITION_GOALS.proteinG}g protein — same meals as /nutrition
+                {NUTRITION_GOALS.proteinG}g protein
               </PanelDescription>
             </div>
           </PanelHeader>
           <PanelBody>
-            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
               <NutritionRings
                 calories={nutrition.rings.calories}
                 protein={nutrition.rings.protein}
-                size={120}
+                size={148}
               />
               <ul className="w-full min-w-0 space-y-3 text-sm">
-                <li className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
-                  <span className="text-xs font-medium text-lime">Calories</span>
-                  <span className="num text-sm text-text">
-                    {nutrition.caloriesToday
-                      ? Math.round(nutrition.caloriesToday)
-                      : "—"}
-                    <span className="ml-1 text-xs text-text-faint">kcal</span>
-                  </span>
-                </li>
-                <li className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
-                  <span className="text-xs font-medium text-[#8fd14f]">
-                    Protein
-                  </span>
-                  <span className="num text-sm text-text">
-                    {nutrition.proteinToday
-                      ? Math.round(nutrition.proteinToday)
-                      : "—"}
-                    <span className="ml-1 text-xs text-text-faint">g</span>
-                  </span>
-                </li>
-                <li className="flex items-baseline justify-between gap-3">
-                  <span className="text-xs font-medium text-text-muted">
-                    Meals today
-                  </span>
-                  <span className="num text-sm text-text">
-                    {nutrition.mealsToday || "—"}
-                  </span>
-                </li>
+                <RingStat
+                  label="Calories"
+                  value={
+                    nutrition.caloriesToday
+                      ? `${Math.round(nutrition.caloriesToday)}`
+                      : null
+                  }
+                  unit="kcal"
+                  tone="text-lime"
+                />
+                <RingStat
+                  label="Protein"
+                  value={
+                    nutrition.proteinToday
+                      ? `${Math.round(nutrition.proteinToday)}`
+                      : null
+                  }
+                  unit="g"
+                  tone="text-[#8fd14f]"
+                />
+                <RingStat
+                  label="Meals"
+                  value={
+                    nutrition.mealsToday ? `${nutrition.mealsToday}` : null
+                  }
+                  unit="today"
+                  tone="text-text-muted"
+                />
               </ul>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               <Link
                 href="/nutrition"
                 className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
@@ -282,87 +235,83 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
               </Link>
               <Link
                 href="/nutrition"
-                className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted hover:text-text"
+                className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
               >
-                Open nutrition
+                Full nutrition
               </Link>
             </div>
           </PanelBody>
         </Panel>
+      </section>
 
-        <Panel className="lg:col-span-7">
-          <PanelHeader>
-            <div className="min-w-0">
-              <PanelTitle>Log a meal</PanelTitle>
-              <PanelDescription>
-                Manual path into hub.meals + food_entries
-              </PanelDescription>
-            </div>
-          </PanelHeader>
-          <PanelBody>
-            <ManualMealLogger compact />
-          </PanelBody>
-        </Panel>
-      </div>
+      <section
+        aria-label="Vitals"
+        className="reveal reveal-delay-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+      >
+        <MetricCard
+          label="Steps"
+          value={metrics.steps !== null ? Math.round(metrics.steps) : null}
+          icon={PulseIcon}
+        />
+        <MetricCard
+          label="Sleep"
+          value={
+            metrics.sleepMinutes !== null
+              ? formatDuration(metrics.sleepMinutes)
+              : null
+          }
+          icon={MoonIcon}
+        />
+        <MetricCard
+          label="Water"
+          value={
+            metrics.waterMl !== null
+              ? (metrics.waterMl / 1000).toFixed(1)
+              : null
+          }
+          unit="L"
+          icon={DropIcon}
+        />
+        <MetricCard
+          label="Resting HR"
+          value={
+            metrics.restingHeartRate !== null
+              ? Math.round(metrics.restingHeartRate)
+              : null
+          }
+          unit="bpm"
+          icon={HeartbeatIcon}
+        />
+        <MetricCard
+          label="Weight"
+          value={metrics.weightKg !== null ? formatKg(metrics.weightKg) : null}
+          unit="kg"
+          icon={ScalesIcon}
+        />
+        <MetricCard
+          label="Blood pressure"
+          value={bp}
+          unit={bp ? "mmHg" : undefined}
+          icon={HeartbeatIcon}
+        />
+        <MetricCard
+          label="Mood"
+          value={metrics.mood !== null ? Math.round(metrics.mood) : null}
+          unit="/5"
+          icon={SmileyIcon}
+        />
+        <MetricCard
+          label="Energy"
+          value={metrics.energy !== null ? Math.round(metrics.energy) : null}
+          unit="/5"
+          icon={PulseIcon}
+        />
+      </section>
 
-      <Panel>
-        <PanelHeader>
-          <div className="min-w-0">
-            <PanelTitle>Recent meals</PanelTitle>
-            <PanelDescription>
-              From the same Nutrition list at /nutrition
-            </PanelDescription>
-          </div>
-        </PanelHeader>
-        <PanelBody flush>
-          {nutrition.recent.length === 0 ? (
-            <EmptyState
-              icon={ForkKnifeIcon}
-              title="No meals yet"
-              description="Snap a plate or log macros — both use the dashboard nutrition model."
-            />
-          ) : (
-            <RecentMealList
-              meals={nutrition.recent.map((meal) => ({
-                id: meal.id,
-                date: meal.date,
-                name: meal.name,
-                mealType: meal.mealType,
-                calories: meal.calories,
-                protein: meal.protein,
-              }))}
-            />
-          )}
-        </PanelBody>
-      </Panel>
-
-      <Panel>
-        <PanelHeader>
-          <div className="min-w-0">
-            <PanelTitle>Log</PanelTitle>
-            <PanelDescription>
-              Weight, sleep, water, vitals, and how you feel — saved to your
-              account.
-            </PanelDescription>
-          </div>
-        </PanelHeader>
-        <PanelBody>
-          <QuickLog
-            defaults={{
-              weightKg: metrics.weightKg,
-              waterMl: metrics.waterMl,
-              restingHeartRate: metrics.restingHeartRate,
-              bpSystolic: metrics.bpSystolic,
-              bpDiastolic: metrics.bpDiastolic,
-              mood: metrics.mood,
-              energy: metrics.energy,
-              sleepMinutes: metrics.sleepMinutes,
-            }}
-          />
-        </PanelBody>
-      </Panel>
-
-      <section aria-label="Shortcuts">
+      <section
+        aria-label="Shortcuts"
+        className="reveal reveal-delay-2"
+      >
         <h2 className="label-caps mb-3">Shortcuts</h2>
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {SHORTCUTS.map((item) => {
@@ -372,8 +321,8 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex min-h-20 flex-col justify-between rounded-lg border border-line bg-surface p-3",
-                    "transition-colors duration-150 hover:border-lime-line hover:bg-surface-raised",
+                    "flex min-h-20 flex-col justify-between rounded-lg border border-line bg-surface/80 p-3 backdrop-blur-sm",
+                    "transition-all duration-200 hover:border-lime-line hover:bg-surface-raised",
                     "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   )}
                 >
@@ -398,7 +347,110 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
         </ul>
       </section>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+      <div className="reveal reveal-delay-3 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <Panel className="lg:col-span-7">
+          <PanelHeader>
+            <div className="min-w-0">
+              <PanelTitle>Log a meal</PanelTitle>
+              <PanelDescription>
+                Manual path into hub.meals + food_entries
+              </PanelDescription>
+            </div>
+          </PanelHeader>
+          <PanelBody>
+            <ManualMealLogger compact />
+          </PanelBody>
+        </Panel>
+
+        <Panel className="lg:col-span-5">
+          <PanelHeader>
+            <div className="min-w-0">
+              <PanelTitle>Sources</PanelTitle>
+              <PanelDescription>
+                {connectedCount === 0
+                  ? "No connections yet"
+                  : `${connectedCount} connected`}
+              </PanelDescription>
+            </div>
+          </PanelHeader>
+          <PanelBody>
+            <p className="text-sm leading-relaxed text-text-muted">
+              Pull activity, vitals, and sleep from Apple Health, Health
+              Connect, or Google Fit.
+            </p>
+            <Link
+              href="/settings/connections"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+            >
+              Manage connections
+            </Link>
+          </PanelBody>
+        </Panel>
+      </div>
+
+      <Panel className="reveal reveal-delay-3">
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Recent meals</PanelTitle>
+            <PanelDescription>Same list as Nutrition</PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody flush>
+          {nutrition.recent.length === 0 ? (
+            <EmptyState
+              icon={ForkKnifeIcon}
+              title="No meals yet"
+              description="Snap a plate or log macros — both use the dashboard nutrition model."
+              action={
+                <Link
+                  href="/nutrition"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime"
+                >
+                  Open nutrition
+                </Link>
+              }
+            />
+          ) : (
+            <RecentMealList
+              meals={nutrition.recent.map((meal) => ({
+                id: meal.id,
+                date: meal.date,
+                name: meal.name,
+                mealType: meal.mealType,
+                calories: meal.calories,
+                protein: meal.protein,
+              }))}
+            />
+          )}
+        </PanelBody>
+      </Panel>
+
+      <Panel className="reveal reveal-delay-4">
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Log vitals</PanelTitle>
+            <PanelDescription>
+              Weight, sleep, water, heart, mood — into health_metrics
+            </PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody>
+          <QuickLog
+            defaults={{
+              weightKg: metrics.weightKg,
+              waterMl: metrics.waterMl,
+              restingHeartRate: metrics.restingHeartRate,
+              bpSystolic: metrics.bpSystolic,
+              bpDiastolic: metrics.bpDiastolic,
+              mood: metrics.mood,
+              energy: metrics.energy,
+              sleepMinutes: metrics.sleepMinutes,
+            }}
+          />
+        </PanelBody>
+      </Panel>
+
+      <div className="reveal reveal-delay-4 grid grid-cols-1 gap-3 lg:grid-cols-12">
         <Panel className="lg:col-span-8">
           <PanelHeader>
             <div className="min-w-0">
@@ -439,26 +491,27 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
 
         <Panel className="lg:col-span-4">
           <PanelHeader>
-            <div className="min-w-0">
-              <PanelTitle>Sources</PanelTitle>
-              <PanelDescription>
-                {connectedCount === 0
-                  ? "No connections yet"
-                  : `${connectedCount} connected`}
-              </PanelDescription>
-            </div>
+            <PanelTitle>Workouts</PanelTitle>
           </PanelHeader>
           <PanelBody>
             <p className="text-sm text-text-muted">
-              Pull activity, vitals, and sleep from Apple Health, Health Connect,
-              or Google Fit.
+              Strength sessions and the exercise library stay one module —
+              never the whole product.
             </p>
-            <Link
-              href="/settings/connections"
-              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
-            >
-              Manage connections
-            </Link>
+            <div className="mt-4 flex flex-col gap-2">
+              <Link
+                href="/workouts"
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-lime-line bg-lime-quiet px-4 text-sm font-medium text-text"
+              >
+                Log workout
+              </Link>
+              <Link
+                href="/workouts/library"
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm text-text-muted hover:text-text"
+              >
+                Exercise library
+              </Link>
+            </div>
           </PanelBody>
         </Panel>
       </div>

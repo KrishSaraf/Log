@@ -23,8 +23,12 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-wrap items-start justify-between gap-4", className)}>
       <div className="min-w-0">
-        {eyebrow ? <p className="label-caps mb-1.5">{eyebrow}</p> : null}
-        <h1 className="text-xl font-medium tracking-tight text-text">{title}</h1>
+        {eyebrow ? (
+          <p className="label-caps mb-1.5 text-lime">{eyebrow}</p>
+        ) : null}
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+          {title}
+        </h1>
         {description ? (
           <p className="mt-1 max-w-prose text-sm text-text-muted">{description}</p>
         ) : null}

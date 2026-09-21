@@ -19,8 +19,9 @@ export default async function ConnectionsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
+        eyebrow="Integrations"
         title="Connections"
-        description="Link HealthKit, Health Connect, and other sources so Log can act as your health home."
+        description="Apple Health on iPhone today. Health Connect and Google Fit stay ready for Android — same hub tables either way."
       />
 
       <Panel>
