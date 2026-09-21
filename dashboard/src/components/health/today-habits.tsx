@@ -8,7 +8,7 @@ import {
   SparkleIcon,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { isFilledTick } from "@/lib/habit-chain";
 import { habitColor } from "@/lib/habit-color";
@@ -42,20 +42,53 @@ export function TodayHabits({
   const [pending, setPending] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [seedNote, setSeedNote] = useState<string | null>(null);
+  /** Keys that just flipped on — drives the satisfying pop animation. */
+  const [justChecked, setJustChecked] = useState<Set<string>>(() => new Set());
+  const popTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     setRows(habits);
   }, [habits]);
 
+  useEffect(() => {
+    const timers = popTimers.current;
+    return () => {
+      for (const t of timers.values()) clearTimeout(t);
+      timers.clear();
+    };
+  }, []);
+
   const done = rows.filter((h) => isFilledTick(h.tick)).length;
   const total = rows.length;
   const progress = total > 0 ? done / total : 0;
+
+  function flashCheck(key: string) {
+    setJustChecked((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+    const existing = popTimers.current.get(key);
+    if (existing) clearTimeout(existing);
+    popTimers.current.set(
+      key,
+      setTimeout(() => {
+        setJustChecked((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+        popTimers.current.delete(key);
+      }, 480),
+    );
+  }
 
   async function toggle(key: string) {
     const row = rows.find((h) => h.key === key);
     if (!row) return;
     const next: Tick | null = isFilledTick(row.tick) ? null : "yes";
     setPending(key);
+    if (next) flashCheck(key);
     setRows((prev) =>
       prev.map((h) =>
         h.key === key
@@ -107,24 +140,29 @@ export function TodayHabits({
   if (total === 0) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm leading-relaxed text-text-muted">
-            No habits yet — seed the default set with a lived-in week so Today
-            feels awake.
-          </p>
-          <button
-            type="button"
-            disabled={seeding}
-            onClick={() => void seedDemo()}
-            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
-            {seeding ? (
-              <CircleNotchIcon size={16} className="animate-spin" aria-hidden />
-            ) : (
-              <SparkleIcon size={16} weight="fill" aria-hidden />
-            )}
-            {seeding ? "Seeding…" : "Seed demo habits"}
-          </button>
+        <div className="rounded-xl border border-dashed border-lime-line/50 bg-[radial-gradient(ellipse_at_top,rgba(198,241,53,0.08),transparent_70%)] px-4 py-6">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 space-y-1">
+              <p className="text-sm font-medium text-text">Habits wake the day</p>
+              <p className="text-sm leading-relaxed text-text-muted">
+                Seed the default set with a lived-in week so Today feels awake —
+                never a blank checklist.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={seeding}
+              onClick={() => void seedDemo()}
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {seeding ? (
+                <CircleNotchIcon size={16} className="animate-spin" aria-hidden />
+              ) : (
+                <SparkleIcon size={16} weight="fill" aria-hidden />
+              )}
+              {seeding ? "Seeding…" : "Seed demo habits"}
+            </button>
+          </div>
         </div>
         {seedNote ? (
           <p className="text-xs text-text-muted">{seedNote}</p>
@@ -139,9 +177,13 @@ export function TodayHabits({
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="num text-2xl font-medium tracking-tight text-text">
-            {done}
-            <span className="text-text-faint">/{total}</span>
+          <p
+            className="num text-2xl font-medium tracking-tight text-text tabular-nums"
+            aria-live="polite"
+          >
+            <span className="text-lime">{done}</span>
+            <span className="mx-1.5 text-sm font-normal text-text-faint">of</span>
+            <span>{total}</span>
           </p>
           <p className="mt-0.5 text-xs text-text-muted">
             {done === 0
@@ -154,10 +196,10 @@ export function TodayHabits({
         <div
           className="h-1.5 w-28 overflow-hidden rounded-full bg-surface-sunken"
           role="progressbar"
-          aria-valuenow={Math.round(progress * 100)}
+          aria-valuenow={done}
           aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Habits done today"
+          aria-valuemax={total}
+          aria-label={`${done} of ${total} habits done today`}
         >
           <div
             className="h-full rounded-full bg-lime transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
@@ -194,6 +236,7 @@ export function TodayHabits({
           const doneToday = isFilledTick(habit.tick);
           const half = habit.tick === "partial";
           const busy = pending === habit.key;
+          const popping = justChecked.has(habit.key);
           return (
             <li
               key={habit.key}
@@ -211,12 +254,18 @@ export function TodayHabits({
                     : `${habit.label}, not logged. Tap to mark done.`
                 }
                 className={cn(
-                  "flex size-11 shrink-0 items-center justify-center rounded-full transition-transform",
-                  "hover:scale-[0.96] active:scale-[0.9] disabled:opacity-50",
+                  "flex size-11 shrink-0 items-center justify-center rounded-full",
+                  "transition-transform duration-150",
+                  "hover:scale-[0.96] active:scale-[0.88] disabled:opacity-50",
+                  popping && "habit-tick-pop",
                 )}
               >
                 <span
-                  className="flex size-8 items-center justify-center rounded-full transition-[background-color,box-shadow] duration-200"
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-full",
+                    "transition-[background-color,box-shadow,transform] duration-200",
+                    popping && "habit-glow-flash",
+                  )}
                   style={
                     doneToday
                       ? { background: color, color: "#0A0A0B" }
@@ -229,18 +278,25 @@ export function TodayHabits({
                   {busy ? (
                     <CircleNotchIcon size={14} className="animate-spin" />
                   ) : doneToday ? (
-                    half ? (
-                      <MinusIcon size={14} weight="bold" />
-                    ) : (
-                      <CheckIcon size={14} weight="bold" />
-                    )
+                    <span className={cn(popping && "habit-check-in", "flex")}>
+                      {half ? (
+                        <MinusIcon size={14} weight="bold" />
+                      ) : (
+                        <CheckIcon size={14} weight="bold" />
+                      )}
+                    </span>
                   ) : null}
                 </span>
               </button>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
-                  <p className="truncate text-sm font-medium text-text">
+                  <p
+                    className={cn(
+                      "truncate text-sm font-medium transition-colors duration-200",
+                      doneToday ? "text-text" : "text-text",
+                    )}
+                  >
                     {habit.label}
                   </p>
                   {habit.streak >= 2 ? (
@@ -263,7 +319,10 @@ export function TodayHabits({
                     return (
                       <span
                         key={`${habit.key}-w${i}`}
-                        className="h-1.5 flex-1 rounded-full"
+                        className={cn(
+                          "h-1.5 flex-1 rounded-full transition-[background-color,opacity,transform] duration-300",
+                          isToday && popping && "scale-y-125",
+                        )}
                         style={{
                           background: filled ? color : "var(--surface-raised)",
                           opacity: tick === "partial" ? 0.45 : 1,

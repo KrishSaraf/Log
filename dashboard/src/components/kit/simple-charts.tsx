@@ -200,7 +200,51 @@ export function SimpleLineChart({
   );
 }
 
-/** Compact SVG sparkline for MetricCard slots — always paints. */
+/** Soft ghost path so empty MetricCard slots never look like a blank chart. */
+function GhostSparkline({
+  height,
+  stroke,
+  className,
+}: {
+  height: number;
+  stroke: string;
+  className?: string;
+}) {
+  const width = 120;
+  const mid = height * 0.55;
+  // Gentle idle wave — intentional placeholder, not a broken frame.
+  const pts = [0, 1, 2, 3, 4, 5, 6, 7]
+    .map((i) => {
+      const x = (i / 7) * width;
+      const y = mid + Math.sin(i * 0.9) * (height * 0.18);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      width="100%"
+      height={height}
+      className={cn("overflow-visible", className)}
+      aria-hidden
+    >
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeOpacity={0.28}
+        strokeDasharray="3 4"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  );
+}
+
+/** Compact SVG sparkline for MetricCard slots — always paints (ghost when empty). */
 export function SimpleSparkline({
   values,
   height = CHART_HEIGHT.sparkline,
@@ -213,13 +257,7 @@ export function SimpleSparkline({
   className?: string;
 }) {
   if (values.length < 2) {
-    return (
-      <div
-        className={cn("rounded-md bg-surface-sunken/80", className)}
-        style={{ height }}
-        aria-hidden
-      />
-    );
+    return <GhostSparkline height={height} stroke={stroke} className={className} />;
   }
 
   const width = 120;

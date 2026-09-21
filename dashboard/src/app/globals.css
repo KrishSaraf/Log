@@ -302,6 +302,55 @@
   }
 }
 
+/* Habit check-in: springy pop + check draw-in */
+@keyframes habit-tick-pop {
+  0% {
+    transform: scale(0.82);
+  }
+  55% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes habit-check-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes habit-glow-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(198, 241, 53, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(198, 241, 53, 0);
+  }
+}
+
+.habit-tick-pop {
+  animation: habit-tick-pop 420ms var(--ease-out-quint) both;
+}
+
+.habit-check-in {
+  animation: habit-check-in 380ms var(--ease-out-quint) both;
+}
+
+.habit-glow-flash {
+  animation: habit-glow-flash 520ms var(--ease-out-quint) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -313,6 +362,12 @@
   }
 
   .ring-glow {
+    animation: none !important;
+  }
+
+  .habit-tick-pop,
+  .habit-check-in,
+  .habit-glow-flash {
     animation: none !important;
   }
 }

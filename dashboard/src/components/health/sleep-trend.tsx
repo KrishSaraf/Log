@@ -42,18 +42,20 @@ export function SleepTrend({
 }) {
   if (points.length === 0) {
     return (
-      <div className={cn("space-y-3", className)}>
+      <div className={cn(className)}>
         <ChartFrame
           isEmpty
           height={height}
           emptyLabel="Sleep nights will plot here — log last night from Today"
+          emptyAction={
+            <a
+              href="#quick-log"
+              className="inline-flex min-h-10 items-center rounded-lg border border-lime-line bg-lime-quiet px-3 text-sm font-medium text-lime transition-opacity hover:opacity-90"
+            >
+              Log sleep
+            </a>
+          }
         />
-        <a
-          href="#quick-log"
-          className="inline-flex min-h-10 items-center rounded-lg border border-lime-line bg-lime-quiet px-3 text-sm font-medium text-lime transition-opacity hover:opacity-90"
-        >
-          Log sleep
-        </a>
       </div>
     );
   }

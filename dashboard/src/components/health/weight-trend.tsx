@@ -18,7 +18,15 @@ export function WeightTrend({
       <ChartFrame
         isEmpty
         height={height}
-        emptyLabel="Weight readings will plot here"
+        emptyLabel="Weight readings will plot here — log a weigh-in above"
+        emptyAction={
+          <a
+            href="#quick-log"
+            className="inline-flex min-h-10 items-center rounded-lg border border-lime-line bg-lime-quiet px-3 text-sm font-medium text-lime transition-opacity hover:opacity-90"
+          >
+            Log weight
+          </a>
+        }
       />
     );
   }

@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * Shown wherever there is genuinely nothing to display. Always says what is
- * missing and what puts data there. Never a substitute for a loading state,
- * and never filled with sample rows.
+ * missing and what puts data there. Soft lime wash keeps morning-demo empties
+ * from looking like broken panels.
  */
 export function EmptyState({
   icon: IconComponent,
@@ -30,6 +30,8 @@ export function EmptyState({
       className={cn(
         "flex flex-col items-center justify-center text-center",
         "animate-[reveal-up_320ms_var(--ease-out-quint)_both]",
+        "rounded-xl border border-dashed border-lime-line/40",
+        "bg-[radial-gradient(ellipse_at_50%_0%,rgba(198,241,53,0.07),transparent_70%)]",
         size === "compact" ? "gap-2 px-4 py-8" : "gap-3 px-6 py-14",
         className,
       )}

@@ -93,15 +93,13 @@ export default async function HealthPage() {
           value={data.latestWeight ? formatKg(data.latestWeight.kg) : null}
           unit="kg"
           icon={ScalesIcon}
+          sparkline={
+            <SimpleSparkline values={historyWeights.map((p) => p.kg)} />
+          }
           footnote={
             data.latestWeight
               ? formatShortDate(data.latestWeight.date)
-              : undefined
-          }
-          sparkline={
-            historyWeights.length >= 2 ? (
-              <SimpleSparkline values={historyWeights.map((p) => p.kg)} />
-            ) : undefined
+              : "Log a weigh-in below"
           }
         />
         <MetricCard
@@ -115,12 +113,10 @@ export default async function HealthPage() {
               ? `${formatShortDate(latestSleep.date)}${
                   latestSleep.quality ? ` · Q${latestSleep.quality}` : ""
                 }`
-              : undefined
+              : "Log last night below"
           }
           sparkline={
-            sleepTrend.length >= 2 ? (
-              <SimpleSparkline values={sleepTrend.map((p) => p.hours)} />
-            ) : undefined
+            <SimpleSparkline values={sleepTrend.map((p) => p.hours)} />
           }
         />
         <MetricCard
@@ -129,24 +125,22 @@ export default async function HealthPage() {
           unit="L"
           icon={DropIcon}
           footnote={
-            latestWater ? formatShortDate(latestWater.date) : undefined
+            latestWater
+              ? formatShortDate(latestWater.date)
+              : "Log glasses below"
           }
-          sparkline={
-            water.length >= 2 ? (
-              <SimpleSparkline values={water.map((p) => p.value)} />
-            ) : undefined
-          }
+          sparkline={<SimpleSparkline values={water.map((p) => p.value)} />}
         />
         <MetricCard
           label="Resting HR"
           value={latestHr ? Math.round(latestHr.value) : null}
           unit="bpm"
           icon={HeartbeatIcon}
-          footnote={latestHr ? formatShortDate(latestHr.date) : undefined}
+          footnote={
+            latestHr ? formatShortDate(latestHr.date) : "Log vitals below"
+          }
           sparkline={
-            restingHr.length >= 2 ? (
-              <SimpleSparkline values={restingHr.map((p) => p.value)} />
-            ) : undefined
+            <SimpleSparkline values={restingHr.map((p) => p.value)} />
           }
         />
       </div>
@@ -223,6 +217,8 @@ export default async function HealthPage() {
               label="Water"
               unit="L"
               format="fixed1"
+              emptyHint="Water intake will plot here — log glasses above"
+              emptyCta="Log water"
             />
           </PanelBody>
         </Panel>
@@ -235,28 +231,34 @@ export default async function HealthPage() {
             </div>
           </PanelHeader>
           <PanelBody>
-            <MetricTrend points={restingHr} label="Resting HR" unit="bpm" />
+            <MetricTrend
+              points={restingHr}
+              label="Resting HR"
+              unit="bpm"
+              emptyHint="Resting heart rate will plot here — log vitals above"
+              emptyCta="Log heart rate"
+            />
           </PanelBody>
         </Panel>
       </div>
 
-      {mood.length > 0 ? (
-        <Panel>
-          <PanelHeader>
-            <div className="min-w-0">
-              <PanelTitle>Mood</PanelTitle>
-              <PanelDescription>1–5 self-report</PanelDescription>
-            </div>
-          </PanelHeader>
-          <PanelBody>
-            <MetricTrend
-              points={mood}
-              label="Mood"
-              height={CHART_HEIGHT.compact}
-            />
-          </PanelBody>
-        </Panel>
-      ) : null}
+      <Panel>
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Mood</PanelTitle>
+            <PanelDescription>1–5 self-report</PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody>
+          <MetricTrend
+            points={mood}
+            label="Mood"
+            height={CHART_HEIGHT.compact}
+            emptyHint="Mood will plot here after a few check-ins"
+            emptyCta="Log mood"
+          />
+        </PanelBody>
+      </Panel>
 
       <Panel>
         <PanelHeader>

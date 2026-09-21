@@ -19,6 +19,9 @@ export function MetricTrend({
   unit,
   height = CHART_HEIGHT.default,
   format = "raw",
+  emptyHint,
+  emptyHref = "#quick-log",
+  emptyCta,
 }: {
   points: MetricPoint[];
   label: string;
@@ -26,13 +29,26 @@ export function MetricTrend({
   height?: number;
   /** Serializable format hint — avoid passing functions from Server Components. */
   format?: FormatMode;
+  emptyHint?: string;
+  emptyHref?: string;
+  emptyCta?: string;
 }) {
   if (points.length === 0) {
     return (
       <ChartFrame
         isEmpty
         height={height}
-        emptyLabel={`${label} will plot here`}
+        emptyLabel={
+          emptyHint ?? `${label} will plot here once you log a few readings`
+        }
+        emptyAction={
+          <a
+            href={emptyHref}
+            className="inline-flex min-h-10 items-center rounded-lg border border-lime-line bg-lime-quiet px-3 text-sm font-medium text-lime transition-opacity hover:opacity-90"
+          >
+            {emptyCta ?? `Log ${label.toLowerCase()}`}
+          </a>
+        }
       />
     );
   }
