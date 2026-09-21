@@ -374,11 +374,7 @@ export function SimpleBarChart({
                 height={h}
                 rx={5}
                 ry={5}
-                fill={
-                  p.fill === "url(#barGlow)"
-                    ? `url(#barGlow-${gradId})`
-                    : (p.fill ?? `url(#barGlow-${gradId})`)
-                }
+                fill={p.fill ?? `url(#barGlow-${gradId})`}
                 opacity={active ? 1 : 0.92}
                 className="transition-opacity duration-150"
                 onMouseEnter={() => setHover(i)}
