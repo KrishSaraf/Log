@@ -32,7 +32,7 @@ Bearer tokens act as the imported-data user
 | `DELETE` | `/api/workouts/:id` | — |
 | `POST` or `PATCH` | `/api/habits/responses` | `{ date?, key, tick: "yes" \| "partial" \| "no", note? }` — upsert by day + habit key |
 | `POST` | `/api/nutrition/analyze-photo` | Multipart field `image` (JPEG/PNG/WebP, ≤8MB) + optional `hint`, **or** JSON `{ imageBase64, mimeType?, hint? }`. Returns `{ draft }` with `mealName`, `mealType`, `foods[]` (calories / proteinG / carbsG / fatG). |
-| `POST` | `/api/nutrition/save-meal` | `{ date?, mealName?, mealType?, notes?, foods: [{ name, quantity?, unit?, calories?, proteinG?, carbsG?, fatG? }] }` → `{ mealId, date }` |
+| `POST` | `/api/nutrition/save-meal` | `{ date?, mealName?, mealType?, notes?, source?: "manual"\|"photo", foods: [{ name, quantity?, unit?, calories?, proteinG?, carbsG?, fatG? }] }` → `{ mealId, date, source }` |
 | `POST` | `/api/workouts/analyze-photo` | Same body as nutrition analyze-photo. Returns `{ draft }` with `name`, `date`, `exercises[]` (`exerciseId` / `matchedName` when the library hits). |
 | `POST` | `/api/health/metrics` | `{ date?, metric?, value }` or `{ date?, kg }` or `{ date?, entries: [{ metric, value, unit? }] }` — upsert daily metrics (`weight_kg`, `water_ml`, `heart_rate_resting`, `blood_pressure_*`, `mood`, `energy`, …) |
 | `GET` | `/api/health/metrics?metric=&from=&to=` | Time series for one metric |

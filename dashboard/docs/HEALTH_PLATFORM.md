@@ -22,8 +22,14 @@ Log is an **all-in-one health home**, not a gym-only logger. Exercise library is
 | Water | `health_metrics` (`water_ml`) | `POST /api/health/metrics` | Quick Log, iOS `LogWaterSheet` |
 | HR / BP | `heart_rate_resting`, `blood_pressure_*` | `POST /api/health/metrics` (`entries`) | Quick Log, iOS `LogVitalsSheet` |
 | Mood / energy | `mood`, `energy` (1–5) | same | Quick Log, iOS vitals sheet |
-| Meals | `meals` / `food_entries` | existing nutrition routes | Nutrition + iOS |
+| Meals | `meals` / `food_entries` (existing) | `POST /api/nutrition/save-meal` (photo + manual) | `/nutrition`, Today hub, iOS Food |
 | Workouts | `workouts`… | existing workout routes | Workouts + library |
+
+### Nutrition source of truth
+
+Dashboard `hub.meals` + `hub.food_entries` — photo logger, manual logger, and iOS
+`MealLog` sync all write the same shape. Today surfaces calories/protein rings
+and recent meals via `loadNutritionSummary()` (shared with `/nutrition`).
 
 ## Connections
 

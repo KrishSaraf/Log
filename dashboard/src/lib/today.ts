@@ -4,12 +4,13 @@ import {
   connectedSources,
   db,
   healthMetrics,
-  meals,
   sleepSessions,
   workouts,
   type ConnectionProvider,
   type ConnectionStatus,
 } from "@/db";
+import type { NutritionSummary } from "@/lib/nutrition";
+import { loadNutritionSummary } from "@/lib/nutrition";
 import { todayIso, toNumber } from "@/lib/format";
 import { safely } from "@/lib/safe-query";
 
@@ -52,6 +53,7 @@ export type TodaySummary = {
     exercise: number;
     stand: number;
   };
+  nutrition: NutritionSummary;
   recent: TodayActivityItem[];
   connections: TodayConnection[];
   connectedCount: number;
@@ -124,8 +126,13 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
   const date = todayIso();
   const recentFrom = daysAgoIso(14);
 
-  const [metricRows, recentWorkouts, recentMeals, recentSleep, connections] =
-    await Promise.all([
+  const [
+    metricRows,
+    recentWorkouts,
+    recentSleep,
+    connections,
+    nutrition,
+  ] = await Promise.all([
       safely(
         () =>
           db
@@ -172,27 +179,6 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
         () =>
           db
             .select({
-              id: meals.id,
-              date: meals.date,
-              name: meals.name,
-              mealType: meals.mealType,
-            })
-            .from(meals)
-            .where(and(eq(meals.userId, userId), gte(meals.date, recentFrom)))
-            .orderBy(desc(meals.date))
-            .limit(5),
-        [] as {
-          id: string;
-          date: string;
-          name: string | null;
-          mealType: string;
-        }[],
-        "today meals",
-      ),
-      safely(
-        () =>
-          db
-            .select({
               id: sleepSessions.id,
               date: sleepSessions.date,
               totalMinutes: sleepSessions.totalMinutes,
@@ -228,6 +214,7 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
         }[],
         "today connections",
       ),
+      loadNutritionSummary(userId, { recentLimit: 8 }),
     ]);
 
   const metrics: TodayMetricMap = {
@@ -259,11 +246,16 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
       subtitle: w.notes,
       date: w.date,
     })),
-    ...recentMeals.map((m) => ({
+    ...nutrition.recent.slice(0, 5).map((m) => ({
       id: `meal:${m.id}`,
       kind: "meal" as const,
       title: m.name?.trim() || m.mealType,
-      subtitle: null,
+      subtitle:
+        m.calories > 0
+          ? `${Math.round(m.calories)} kcal${
+              m.protein > 0 ? ` · P ${Math.round(m.protein)}g` : ""
+            }`
+          : null,
       date: m.date,
     })),
     ...recentSleep.map((s) => ({
@@ -292,6 +284,7 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
       exercise: ringProgress(metrics.exerciseMinutes, RING_GOALS.exerciseMinutes),
       stand: ringProgress(metrics.standHours, RING_GOALS.standHours),
     },
+    nutrition,
     recent,
     connections: connectionRows,
     connectedCount: connectionRows.filter((c) => c.status === "connected").length,

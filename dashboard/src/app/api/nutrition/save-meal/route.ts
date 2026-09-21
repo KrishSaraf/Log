@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { db, foodEntries, meals } from "@/db";
+import { db, foodEntries, meals, type Source } from "@/db";
 import { AuthRequiredError, requireUserId } from "@/lib/auth-user";
 import { todayIso } from "@/lib/format";
 
 export const runtime = "nodejs";
+
+const SOURCES = new Set<Source>(["manual", "photo", "import", "apple_health"]);
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +16,7 @@ export async function POST(req: Request) {
       mealName?: string | null;
       mealType?: "breakfast" | "lunch" | "dinner" | "snack";
       notes?: string | null;
+      source?: Source;
       foods?: Array<{
         name: string;
         quantity?: number | null;
@@ -29,7 +32,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Add at least one food." }, { status: 400 });
     }
 
-    const date = body.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : todayIso();
+    const date =
+      body.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : todayIso();
+    const source =
+      body.source && SOURCES.has(body.source) ? body.source : "photo";
 
     const meal = await db.transaction(async (tx) => {
       const [row] = await tx
@@ -40,7 +46,7 @@ export async function POST(req: Request) {
           name: body.mealName ?? "Meal",
           mealType: body.mealType ?? "snack",
           notes: body.notes ?? null,
-          source: "photo",
+          source,
         })
         .returning();
 
@@ -60,7 +66,11 @@ export async function POST(req: Request) {
       return row;
     });
 
-    return NextResponse.json({ mealId: meal.id, date: meal.date });
+    return NextResponse.json({
+      mealId: meal.id,
+      date: meal.date,
+      source: meal.source,
+    });
   } catch (err) {
     if (err instanceof AuthRequiredError) {
       return NextResponse.json({ error: "Sign in required." }, { status: 401 });

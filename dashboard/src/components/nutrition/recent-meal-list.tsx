@@ -11,6 +11,7 @@ type Meal = {
   name: string | null;
   mealType: string;
   calories: number;
+  protein?: number;
 };
 
 export function RecentMealList({ meals }: { meals: Meal[] }) {
@@ -41,6 +42,9 @@ export function RecentMealList({ meals }: { meals: Meal[] }) {
             </p>
             <p className="text-xs text-text-faint">
               {formatShortDate(meal.date)} · {meal.mealType}
+              {meal.protein != null && meal.protein > 0
+                ? ` · P ${Math.round(meal.protein)}g`
+                : ""}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3">

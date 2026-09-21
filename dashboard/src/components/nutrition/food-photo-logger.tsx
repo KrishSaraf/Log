@@ -92,6 +92,7 @@ export function FoodPhotoLogger() {
         body: JSON.stringify({
           mealName: draft.mealName,
           mealType: draft.mealType,
+          source: "photo",
           foods: draft.foods,
           notes: draft.assumptions?.join(" · ") || null,
         }),

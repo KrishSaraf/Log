@@ -15,6 +15,9 @@ import {
 
 import { ActivityRings } from "@/components/health/activity-rings";
 import { QuickLog } from "@/components/health/quick-log";
+import { ManualMealLogger } from "@/components/nutrition/manual-meal-logger";
+import { NutritionRings } from "@/components/nutrition/nutrition-rings";
+import { RecentMealList } from "@/components/nutrition/recent-meal-list";
 import {
   EmptyState,
   MetricCard,
@@ -31,6 +34,7 @@ import {
   formatLongDate,
   formatShortDate,
 } from "@/lib/format";
+import { NUTRITION_GOALS } from "@/lib/nutrition";
 import type { TodaySummary } from "@/lib/today";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +84,7 @@ const KIND_LABEL: Record<TodaySummary["recent"][number]["kind"], string> = {
 };
 
 export function TodayHome({ summary }: { summary: TodaySummary }) {
-  const { metrics, rings, recent, connectedCount } = summary;
+  const { metrics, rings, recent, connectedCount, nutrition } = summary;
   const hasRings =
     metrics.activeCalories !== null ||
     metrics.exerciseMinutes !== null ||
@@ -219,6 +223,118 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           />
         </div>
       </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <Panel className="lg:col-span-5">
+          <PanelHeader>
+            <div className="min-w-0">
+              <PanelTitle>Nutrition</PanelTitle>
+              <PanelDescription>
+                Soft targets {NUTRITION_GOALS.calories} kcal ·{" "}
+                {NUTRITION_GOALS.proteinG}g protein — same meals as /nutrition
+              </PanelDescription>
+            </div>
+          </PanelHeader>
+          <PanelBody>
+            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
+              <NutritionRings
+                calories={nutrition.rings.calories}
+                protein={nutrition.rings.protein}
+                size={120}
+              />
+              <ul className="w-full min-w-0 space-y-3 text-sm">
+                <li className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
+                  <span className="text-xs font-medium text-lime">Calories</span>
+                  <span className="num text-sm text-text">
+                    {nutrition.caloriesToday
+                      ? Math.round(nutrition.caloriesToday)
+                      : "—"}
+                    <span className="ml-1 text-xs text-text-faint">kcal</span>
+                  </span>
+                </li>
+                <li className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
+                  <span className="text-xs font-medium text-[#8fd14f]">
+                    Protein
+                  </span>
+                  <span className="num text-sm text-text">
+                    {nutrition.proteinToday
+                      ? Math.round(nutrition.proteinToday)
+                      : "—"}
+                    <span className="ml-1 text-xs text-text-faint">g</span>
+                  </span>
+                </li>
+                <li className="flex items-baseline justify-between gap-3">
+                  <span className="text-xs font-medium text-text-muted">
+                    Meals today
+                  </span>
+                  <span className="num text-sm text-text">
+                    {nutrition.mealsToday || "—"}
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/nutrition"
+                className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+              >
+                Snap a meal
+              </Link>
+              <Link
+                href="/nutrition"
+                className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted hover:text-text"
+              >
+                Open nutrition
+              </Link>
+            </div>
+          </PanelBody>
+        </Panel>
+
+        <Panel className="lg:col-span-7">
+          <PanelHeader>
+            <div className="min-w-0">
+              <PanelTitle>Log a meal</PanelTitle>
+              <PanelDescription>
+                Manual path into hub.meals + food_entries
+              </PanelDescription>
+            </div>
+          </PanelHeader>
+          <PanelBody>
+            <ManualMealLogger compact />
+          </PanelBody>
+        </Panel>
+      </div>
+
+      <Panel>
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Recent meals</PanelTitle>
+            <PanelDescription>
+              From the same Nutrition list at /nutrition
+            </PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody flush>
+          {nutrition.recent.length === 0 ? (
+            <EmptyState
+              icon={ForkKnifeIcon}
+              title="No meals yet"
+              description="Snap a plate or log macros — both use the dashboard nutrition model."
+            />
+          ) : (
+            <RecentMealList
+              meals={nutrition.recent.map((meal) => ({
+                id: meal.id,
+                date: meal.date,
+                name: meal.name,
+                mealType: meal.mealType,
+                calories: meal.calories,
+                protein: meal.protein,
+              }))}
+            />
+          )}
+        </PanelBody>
+      </Panel>
 
       <Panel>
         <PanelHeader>
