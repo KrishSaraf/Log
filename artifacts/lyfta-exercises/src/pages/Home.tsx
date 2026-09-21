@@ -74,21 +74,21 @@ export default function Home() {
       />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        <div className="mb-8 flex items-end justify-between gap-4">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+            <p className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
               Library
             </p>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
               Exercises
             </h1>
           </div>
           {!isLoading && data ? (
             <div className="text-right">
-              <div className="font-display text-3xl font-extrabold tabular-nums text-accent leading-none">
+              <div className="font-display text-2xl sm:text-3xl font-extrabold tabular-nums text-accent leading-none">
                 {data.total.toLocaleString()}
               </div>
-              <div className="mt-1 text-xs text-faint uppercase tracking-wider">
+              <div className="mt-1 text-[10px] text-faint uppercase tracking-wider">
                 {isFetching ? "Updating…" : "results"}
               </div>
             </div>
