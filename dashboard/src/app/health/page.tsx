@@ -201,7 +201,7 @@ export default async function HealthPage() {
               }))}
               label="Water"
               unit="L"
-              formatValue={(n) => n.toFixed(1)}
+              format="fixed1"
             />
           </PanelBody>
         </Panel>

@@ -13,19 +13,27 @@ import {
 import { formatShortDate } from "@/lib/format";
 import type { MetricPoint } from "@/lib/health-log";
 
+type FormatMode = "int" | "fixed1" | "raw";
+
+function formatByMode(n: number, mode: FormatMode) {
+  if (mode === "fixed1") return n.toFixed(1);
+  if (mode === "int") return String(Math.round(n));
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
 export function MetricTrend({
   points,
   label,
   unit,
   height = CHART_HEIGHT.default,
-  formatValue = (n: number) =>
-    Number.isInteger(n) ? String(n) : n.toFixed(1),
+  format = "raw",
 }: {
   points: MetricPoint[];
   label: string;
   unit?: string;
   height?: number;
-  formatValue?: (n: number) => string;
+  /** Serializable format hint — avoid passing functions from Server Components. */
+  format?: FormatMode;
 }) {
   if (points.length === 0) {
     return (
@@ -57,13 +65,13 @@ export function MetricTrend({
           {...axisProps}
           domain={[min - pad, max + pad]}
           width={40}
-          tickFormatter={(value: number) => formatValue(value)}
+          tickFormatter={(value: number) => formatByMode(value, format)}
         />
         <Tooltip
           {...tooltipProps}
           labelFormatter={(value) => formatShortDate(String(value))}
           formatter={(value) => [
-            `${formatValue(Number(value))}${unit ? ` ${unit}` : ""}`,
+            `${formatByMode(Number(value), format)}${unit ? ` ${unit}` : ""}`,
             label,
           ]}
         />
