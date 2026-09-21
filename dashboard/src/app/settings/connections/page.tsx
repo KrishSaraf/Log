@@ -21,7 +21,7 @@ export default async function ConnectionsPage() {
       <PageHeader
         eyebrow="Integrations"
         title="Connections"
-        description="One hub for every source — Apple Health live on iPhone, Health Connect and Google Fit stubbed for Android."
+        description="One hub for every source — Apple Health live on iPhone, Health Connect polished for Android, Google Fit as fallback."
       />
 
       <Panel className="overflow-hidden reveal">

@@ -9,6 +9,7 @@ import {
 
 import { MetricTrend } from "@/components/health/metric-trend";
 import { QuickLog } from "@/components/health/quick-log";
+import { SleepTrend } from "@/components/health/sleep-trend";
 import { WeightTrend } from "@/components/health/weight-trend";
 import {
   EmptyState,
@@ -64,14 +65,13 @@ export default async function HealthPage() {
     ),
   ]);
 
-  const sleepPoints: MetricPoint[] = sleepRows
+  const sleepTrend = [...sleepRows]
+    .reverse()
     .map((row) => ({
       date: row.date,
-      value: row.totalMinutes / 60,
-      unit: "hr",
-      source: row.source,
-    }))
-    .reverse();
+      hours: Math.round((row.totalMinutes / 60) * 10) / 10,
+      quality: row.quality,
+    }));
 
   const latestSleep = sleepRows[0] ?? null;
   const latestWater = water.at(-1) ?? null;
@@ -170,20 +170,19 @@ export default async function HealthPage() {
           </PanelBody>
         </Panel>
 
-        <Panel>
+        <Panel className="overflow-hidden">
           <PanelHeader>
             <div className="min-w-0">
               <PanelTitle>Sleep</PanelTitle>
-              <PanelDescription>Hours per night</PanelDescription>
+              <PanelDescription>
+                {sleepTrend.length > 1
+                  ? `${formatShortDate(sleepTrend[0].date)} – ${formatShortDate(sleepTrend[sleepTrend.length - 1].date)}`
+                  : "Hours per night · quality tints"}
+              </PanelDescription>
             </div>
           </PanelHeader>
           <PanelBody>
-            <MetricTrend
-              points={sleepPoints}
-              label="Sleep"
-              unit="hr"
-              formatValue={(n) => n.toFixed(1)}
-            />
+            <SleepTrend points={sleepTrend} height={CHART_HEIGHT.default} />
           </PanelBody>
         </Panel>
 

@@ -9,21 +9,30 @@ import {
   View,
   ScrollView,
 } from "react-native";
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setBaseUrl } from "@workspace/api-client-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useWorkout } from "@/hooks/useWorkout";
 import { resolveApiBaseUrl } from "@/lib/api";
-import { colors, radii, space, type } from "@/theme/tokens";
+import { colors, motion, radii, space, type } from "@/theme/tokens";
 
 type StubConnection = {
   id: string;
   name: string;
   detail: string;
   platform: "ios" | "android" | "any";
+  scopes?: string[];
 };
 
 const STUB_KEY = "log.connections.stubs";
+
+const HC_SCOPES = ["Steps", "Sleep", "Heart rate", "Weight"] as const;
 
 const CATALOG: StubConnection[] = [
   {
@@ -35,13 +44,15 @@ const CATALOG: StubConnection[] = [
   {
     id: "health_connect",
     name: "Health Connect",
-    detail: "Android vitals stub — native read coming soon",
+    detail:
+      "Mark intent for Android vitals — native read lands next. Nothing leaves the phone yet.",
     platform: "android",
+    scopes: [...HC_SCOPES],
   },
   {
     id: "google_fit",
     name: "Google Fit",
-    detail: "Legacy Fit streams · placeholder until Health Connect ships",
+    detail: "Legacy Fit fallback when Health Connect is unavailable",
     platform: "android",
   },
 ];
@@ -56,11 +67,72 @@ function visibleCatalog(): StubConnection[] {
   return CATALOG;
 }
 
+function ConnectionRow({
+  item,
+  on,
+  onToggle,
+  index,
+}: {
+  item: StubConnection;
+  on: boolean;
+  onToggle: () => void;
+  index: number;
+}) {
+  const scale = useSharedValue(1);
+  const anim = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View entering={FadeInDown.delay(80 + index * 60).springify()}>
+      <Animated.View style={anim}>
+        <Pressable
+          onPressIn={() => {
+            scale.value = withSpring(motion.pressScale, motion.spring);
+          }}
+          onPressOut={() => {
+            scale.value = withSpring(1, motion.spring);
+          }}
+          onPress={onToggle}
+          style={[styles.connRow, on && styles.connRowOn]}
+        >
+          <View style={{ flex: 1, gap: 6 }}>
+            <Text style={styles.connName}>{item.name}</Text>
+            <Text style={styles.connDetail}>{item.detail}</Text>
+            {item.scopes ? (
+              <View style={styles.scopeRow}>
+                {item.scopes.map((scope) => (
+                  <View
+                    key={scope}
+                    style={[styles.scopeChip, on && styles.scopeChipOn]}
+                  >
+                    <Text
+                      style={[styles.scopeText, on && styles.scopeTextOn]}
+                    >
+                      {scope}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+          <View style={[styles.badge, on && styles.badgeOn]}>
+            <Text style={[styles.badgeText, on && styles.badgeTextOn]}>
+              {on ? "Enabled" : item.id === "health_connect" ? "Enable" : "Stub"}
+            </Text>
+          </View>
+        </Pressable>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
 export default function SettingsScreen() {
   const { settings, updateSettings } = useWorkout();
   const [rest, setRest] = useState(String(settings.restSeconds));
   const [apiUrl, setApiUrl] = useState(settings.apiBaseUrl || resolveApiBaseUrl());
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     setRest(String(settings.restSeconds));
@@ -77,50 +149,68 @@ export default function SettingsScreen() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2800);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   async function toggleStub(id: string) {
-    const next = { ...enabled, [id]: !enabled[id] };
+    const nextOn = !enabled[id];
+    const next = { ...enabled, [id]: nextOn };
     setEnabled(next);
     await AsyncStorage.setItem(STUB_KEY, JSON.stringify(next));
+    if (id === "health_connect") {
+      setToast(
+        nextOn
+          ? "Health Connect marked — scopes ready when native read ships"
+          : "Health Connect stub cleared",
+      );
+    }
   }
 
   const connections = visibleCatalog();
+  const isAndroid = Platform.OS === "android";
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.brand}>Settings</Text>
-      <Text style={styles.sub}>
-        Charcoal + lime — same tokens as web Today and iOS. Hub auth sync lands next.
-      </Text>
+      <Animated.View entering={FadeInDown.duration(420).springify()}>
+        <Text style={styles.brand}>Settings</Text>
+        <Text style={styles.sub}>
+          Charcoal + lime #C6F135 — same tokens as web Today and iOS.
+        </Text>
+      </Animated.View>
 
-      <Text style={styles.section}>Connections</Text>
+      {toast ? (
+        <Animated.View
+          entering={FadeInDown.duration(280).springify()}
+          style={styles.toast}
+        >
+          <Text style={styles.toastText}>{toast}</Text>
+        </Animated.View>
+      ) : null}
+
+      <Text style={styles.section}>
+        {isAndroid ? "Health Connect" : "Connections"}
+      </Text>
       <Text style={styles.sectionHint}>
-        {Platform.OS === "android"
-          ? "Health Connect stubs on this device. Enabling marks intent — no data leaves the phone yet."
+        {isAndroid
+          ? "Enable Health Connect to claim it on this device. Native permission prompts and hub sync land next — no data leaves the phone yet."
           : Platform.OS === "ios"
             ? "Use the native Log app for live HealthKit. Stubs here stay local."
             : "Platform stubs for planning — enable to mark intent on this device."}
       </Text>
+
       <View style={styles.connList}>
-        {connections.map((item) => {
-          const on = !!enabled[item.id];
-          return (
-            <Pressable
-              key={item.id}
-              onPress={() => void toggleStub(item.id)}
-              style={[styles.connRow, on && styles.connRowOn]}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.connName}>{item.name}</Text>
-                <Text style={styles.connDetail}>{item.detail}</Text>
-              </View>
-              <View style={[styles.badge, on && styles.badgeOn]}>
-                <Text style={[styles.badgeText, on && styles.badgeTextOn]}>
-                  {on ? "Enabled" : "Stub"}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
+        {connections.map((item, index) => (
+          <ConnectionRow
+            key={item.id}
+            item={item}
+            on={!!enabled[item.id]}
+            onToggle={() => void toggleStub(item.id)}
+            index={index}
+          />
+        ))}
       </View>
 
       <Text style={styles.label}>Rest timer (seconds)</Text>
@@ -155,7 +245,7 @@ export default function SettingsScreen() {
         })}
       </View>
       <Text style={styles.hint}>
-        Display preference only — values are stored in kg. Lb conversion UI is TODO.
+        Display preference only — values are stored in kg.
       </Text>
 
       <Text style={styles.label}>API base URL</Text>
@@ -181,7 +271,9 @@ export default function SettingsScreen() {
 
       <View style={styles.tokenCard}>
         <Text style={styles.tokenTitle}>Brand tokens</Text>
-        <Text style={styles.tokenLine}>accent #C6F135 · bg #0A0A0B · surface #101012 · card #141416</Text>
+        <Text style={styles.tokenLine}>
+          accent #C6F135 · bg #0A0A0B · surface #101012 · card #141416
+        </Text>
         <Text style={styles.tokenLine}>radius 12 · Outfit + Inter</Text>
       </View>
     </ScrollView>
@@ -203,6 +295,21 @@ const styles = StyleSheet.create({
     marginBottom: space.md,
     lineHeight: 20,
   },
+  toast: {
+    backgroundColor: colors.primaryMuted,
+    borderRadius: radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.primary,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    marginBottom: space.sm,
+  },
+  toastText: {
+    fontFamily: type.bodyMed,
+    fontSize: 13,
+    color: colors.primary,
+    lineHeight: 18,
+  },
   section: {
     fontFamily: type.displaySemi,
     fontSize: 18,
@@ -219,7 +326,7 @@ const styles = StyleSheet.create({
   connList: { gap: space.sm, marginBottom: space.md },
   connRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: space.md,
     backgroundColor: colors.card,
     borderRadius: radii.lg,
@@ -242,14 +349,39 @@ const styles = StyleSheet.create({
     fontFamily: type.body,
     fontSize: 12,
     color: colors.mutedForeground,
-    marginTop: 2,
     lineHeight: 16,
+  },
+  scopeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 2,
+  },
+  scopeChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radii.sm,
+    backgroundColor: colors.muted,
+  },
+  scopeChipOn: {
+    backgroundColor: "rgba(198, 241, 53, 0.22)",
+  },
+  scopeText: {
+    fontFamily: type.bodyMed,
+    fontSize: 10,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: colors.mutedForeground,
+  },
+  scopeTextOn: {
+    color: colors.primary,
   },
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.sm,
     backgroundColor: colors.muted,
+    marginTop: 2,
   },
   badgeOn: {
     backgroundColor: colors.primary,

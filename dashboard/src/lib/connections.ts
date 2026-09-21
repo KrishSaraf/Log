@@ -31,7 +31,8 @@ export const CONNECTION_CATALOG: ConnectionCatalogItem[] = [
   {
     provider: "health_connect",
     name: "Health Connect",
-    description: "Android vitals and activity through Google Health Connect.",
+    description:
+      "Android steps, sleep, heart rate, and weight through Google Health Connect.",
     platform: "android",
     hookAvailable: false,
     comingSoon: true,
@@ -39,7 +40,8 @@ export const CONNECTION_CATALOG: ConnectionCatalogItem[] = [
   {
     provider: "google_fit",
     name: "Google Fit",
-    description: "Legacy Google Fit streams where Health Connect is unavailable.",
+    description:
+      "Legacy Fit streams where Health Connect is unavailable — prefer Health Connect first.",
     platform: "android",
     hookAvailable: false,
     comingSoon: true,
