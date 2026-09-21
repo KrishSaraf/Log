@@ -36,11 +36,11 @@ export function EmptyState({
       {IconComponent ? (
         <span
           className={cn(
-            "flex items-center justify-center rounded-md border border-line bg-surface-raised text-text-faint",
+            "flex items-center justify-center rounded-lg border border-lime-line bg-lime-quiet text-lime",
             size === "compact" ? "size-8" : "size-10",
           )}
         >
-          <IconComponent size={size === "compact" ? 16 : 18} weight="regular" aria-hidden />
+          <IconComponent size={size === "compact" ? 16 : 18} weight="duotone" aria-hidden />
         </span>
       ) : null}
 
