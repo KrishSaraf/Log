@@ -19,9 +19,7 @@ function EmptyChartGhost({ height }: { height: number }) {
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
-      width="100%"
-      height={height}
-      className="absolute inset-0 opacity-100"
+      className="pointer-events-none absolute inset-0 size-full"
       aria-hidden
       preserveAspectRatio="none"
     >
