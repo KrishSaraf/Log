@@ -14,8 +14,7 @@ import { hub, sourceEnum } from "./_shared";
 /**
  * Nightly sleep sessions. Stage minutes are nullable so a source that only
  * reports total sleep still fits. Daily totals can also land in
- * `health_metrics` (`sleep_minutes`, `sleep_deep_minutes`, …); this table
- * keeps the session-shaped record for trends and per-night detail.
+ * `health_metrics` (`sleep_minutes`, …); this table keeps the session record.
  */
 export const sleepSessions = hub.table(
   "sleep_sessions",
@@ -33,6 +32,8 @@ export const sleepSessions = hub.table(
     remMinutes: integer("rem_minutes"),
     lightMinutes: integer("light_minutes"),
     awakeMinutes: integer("awake_minutes"),
+    /** Subjective quality, 1 (poor) – 5 (great). */
+    quality: integer("quality"),
     source: sourceEnum("source").notNull().default("manual"),
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true })

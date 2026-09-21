@@ -21,6 +21,11 @@ export type TodayMetricMap = {
   sleepMinutes: number | null;
   restingHeartRate: number | null;
   weightKg: number | null;
+  waterMl: number | null;
+  mood: number | null;
+  energy: number | null;
+  bpSystolic: number | null;
+  bpDiastolic: number | null;
 };
 
 export type TodayActivityItem = {
@@ -66,6 +71,11 @@ const EMPTY_METRICS: TodayMetricMap = {
   sleepMinutes: null,
   restingHeartRate: null,
   weightKg: null,
+  waterMl: null,
+  mood: null,
+  energy: null,
+  bpSystolic: null,
+  bpDiastolic: null,
 };
 
 const METRIC_KEYS = [
@@ -76,6 +86,11 @@ const METRIC_KEYS = [
   "sleep_minutes",
   "heart_rate_resting",
   "weight_kg",
+  "water_ml",
+  "mood",
+  "energy",
+  "blood_pressure_systolic",
+  "blood_pressure_diastolic",
 ] as const;
 
 function ringProgress(value: number | null, goal: number) {
@@ -223,6 +238,11 @@ export async function loadTodaySummary(userId: string): Promise<TodaySummary> {
     sleepMinutes: pickMetric(metricRows, "sleep_minutes"),
     restingHeartRate: pickMetric(metricRows, "heart_rate_resting"),
     weightKg: pickMetric(metricRows, "weight_kg"),
+    waterMl: pickMetric(metricRows, "water_ml"),
+    mood: pickMetric(metricRows, "mood"),
+    energy: pickMetric(metricRows, "energy"),
+    bpSystolic: pickMetric(metricRows, "blood_pressure_systolic"),
+    bpDiastolic: pickMetric(metricRows, "blood_pressure_diastolic"),
   };
 
   // If sleep table has tonight and metrics do not, surface the session total.

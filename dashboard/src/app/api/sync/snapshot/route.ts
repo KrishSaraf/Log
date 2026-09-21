@@ -9,6 +9,7 @@ import {
   meals,
   questionResponses,
   questions,
+  sleepSessions,
   workoutExercises,
   workouts,
   workoutSets,
@@ -30,6 +31,7 @@ export async function GET(req: Request) {
       workoutRows,
       mealRows,
       metricRows,
+      sleepRows,
       exerciseCountRow,
       filters,
     ] = await Promise.all([
@@ -58,6 +60,11 @@ export async function GET(req: Request) {
         .from(healthMetrics)
         .where(eq(healthMetrics.userId, userId))
         .orderBy(asc(healthMetrics.date)),
+      db
+        .select()
+        .from(sleepSessions)
+        .where(eq(sleepSessions.userId, userId))
+        .orderBy(asc(sleepSessions.date)),
       db.select({ n: count() }).from(exercises),
       getExerciseFilters(),
     ]);
@@ -176,6 +183,16 @@ export async function GET(req: Request) {
         unit: row.unit,
         source: row.source,
         recordedAt: row.recordedAt,
+      })),
+      sleep_sessions: sleepRows.map((row) => ({
+        id: row.id,
+        date: row.date,
+        totalMinutes: row.totalMinutes,
+        quality: row.quality,
+        startedAt: row.startedAt,
+        endedAt: row.endedAt,
+        source: row.source,
+        notes: row.notes,
       })),
       exercises: {
         count: exerciseCountRow[0]?.n ?? 0,

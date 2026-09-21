@@ -236,7 +236,7 @@ struct LogWeightSheet: View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(filled ? Color.white : Palette.ink)
+                .foregroundStyle(filled ? Palette.onAccent : Palette.ink)
                 .frame(width: 48, height: 48)
                 .background(
                     filled ? Palette.rust : Palette.surface,

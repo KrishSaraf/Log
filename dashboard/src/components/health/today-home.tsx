@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BarbellIcon,
   BooksIcon,
+  DropIcon,
   ForkKnifeIcon,
   HeartbeatIcon,
   ListChecksIcon,
@@ -9,9 +10,11 @@ import {
   PlugsConnectedIcon,
   PulseIcon,
   ScalesIcon,
+  SmileyIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
 import { ActivityRings } from "@/components/health/activity-rings";
+import { QuickLog } from "@/components/health/quick-log";
 import {
   EmptyState,
   MetricCard,
@@ -22,7 +25,12 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/kit";
-import { formatDuration, formatKg, formatLongDate, formatShortDate } from "@/lib/format";
+import {
+  formatDuration,
+  formatKg,
+  formatLongDate,
+  formatShortDate,
+} from "@/lib/format";
 import type { TodaySummary } from "@/lib/today";
 import { cn } from "@/lib/utils";
 
@@ -47,8 +55,8 @@ const SHORTCUTS = [
   },
   {
     href: "/health",
-    label: "Metrics",
-    description: "Trends",
+    label: "Trends",
+    description: "History",
     icon: HeartbeatIcon,
   },
   {
@@ -77,6 +85,11 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
     metrics.activeCalories !== null ||
     metrics.exerciseMinutes !== null ||
     metrics.standHours !== null;
+
+  const bp =
+    metrics.bpSystolic != null && metrics.bpDiastolic != null
+      ? `${Math.round(metrics.bpSystolic)}/${Math.round(metrics.bpDiastolic)}`
+      : null;
 
   return (
     <div className="space-y-8">
@@ -139,13 +152,13 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             {!hasRings ? (
               <p className="mt-4 text-xs text-text-faint">
                 Connect Apple Health or Health Connect to fill these rings
-                automatically.
+                automatically — or log manually below.
               </p>
             ) : null}
           </PanelBody>
         </Panel>
 
-        <div className="grid grid-cols-2 gap-3 lg:col-span-7 lg:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 lg:col-span-7 sm:grid-cols-3">
           <MetricCard
             label="Steps"
             value={metrics.steps !== null ? Math.round(metrics.steps) : null}
@@ -159,6 +172,16 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 : null
             }
             icon={MoonIcon}
+          />
+          <MetricCard
+            label="Water"
+            value={
+              metrics.waterMl !== null
+                ? (metrics.waterMl / 1000).toFixed(1)
+                : null
+            }
+            unit="L"
+            icon={DropIcon}
           />
           <MetricCard
             label="Resting HR"
@@ -176,8 +199,52 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             unit="kg"
             icon={ScalesIcon}
           />
+          <MetricCard
+            label="Blood pressure"
+            value={bp}
+            unit={bp ? "mmHg" : undefined}
+            icon={HeartbeatIcon}
+          />
+          <MetricCard
+            label="Mood"
+            value={metrics.mood !== null ? Math.round(metrics.mood) : null}
+            unit="/5"
+            icon={SmileyIcon}
+          />
+          <MetricCard
+            label="Energy"
+            value={metrics.energy !== null ? Math.round(metrics.energy) : null}
+            unit="/5"
+            icon={PulseIcon}
+          />
         </div>
       </div>
+
+      <Panel>
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Log</PanelTitle>
+            <PanelDescription>
+              Weight, sleep, water, vitals, and how you feel — saved to your
+              account.
+            </PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody>
+          <QuickLog
+            defaults={{
+              weightKg: metrics.weightKg,
+              waterMl: metrics.waterMl,
+              restingHeartRate: metrics.restingHeartRate,
+              bpSystolic: metrics.bpSystolic,
+              bpDiastolic: metrics.bpDiastolic,
+              mood: metrics.mood,
+              energy: metrics.energy,
+              sleepMinutes: metrics.sleepMinutes,
+            }}
+          />
+        </PanelBody>
+      </Panel>
 
       <section aria-label="Shortcuts">
         <h2 className="label-caps mb-3">Shortcuts</h2>
@@ -194,7 +261,12 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                     "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   )}
                 >
-                  <Icon size={18} className="text-lime" weight="duotone" aria-hidden />
+                  <Icon
+                    size={18}
+                    className="text-lime"
+                    weight="duotone"
+                    aria-hidden
+                  />
                   <span>
                     <span className="block text-sm font-medium text-text">
                       {item.label}

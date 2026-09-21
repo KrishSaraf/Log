@@ -1,4 +1,4 @@
-# Health platform architecture (wave 1)
+# Health platform architecture (wave 1+)
 
 Log is an **all-in-one health home**, not a gym-only logger. Exercise library is one module.
 
@@ -6,21 +6,24 @@ Log is an **all-in-one health home**, not a gym-only logger. Exercise library is
 
 | Surface | Role |
 |---|---|
-| **Today** (`/`) | Rings + vitals summary, recent activity, shortcuts |
+| **Today** (`/`) | Rings + vitals summary, **Quick Log**, recent activity, shortcuts |
 | **Workouts** | Sessions + **Exercise library** tab |
 | **Nutrition** | Meals / macros |
-| **Health** | Trends and metric coverage |
+| **Health** | Trends (weight, sleep, water, HR, mood) + Quick Log |
 | **Habits** (`/log`) | Daily tick grid |
 | **Connections** | HealthKit / Health Connect / Google Fit |
 
-## Data (hub schema)
+## Manual logging (DB → API → UI)
 
-- `health_metrics` — daily vitals / activity samples (existing)
-- `sleep_sessions` — nightly sleep with optional stages
-- `meals` / `food_entries` — nutrition (existing)
-- `connected_sources` — per-user provider link state
-- `workouts`… — training (existing)
-- `questions` / `question_responses` — habits (existing)
+| Type | Storage | Write API | UI |
+|---|---|---|---|
+| Weight | `health_metrics` (`weight_kg`) | `POST /api/health/metrics` | Today/Health Quick Log, iOS `LogWeightSheet` |
+| Sleep | `sleep_sessions` + mirrored `sleep_minutes` | `POST /api/health/sleep` | Quick Log, iOS `LogSleepSheet` |
+| Water | `health_metrics` (`water_ml`) | `POST /api/health/metrics` | Quick Log, iOS `LogWaterSheet` |
+| HR / BP | `heart_rate_resting`, `blood_pressure_*` | `POST /api/health/metrics` (`entries`) | Quick Log, iOS `LogVitalsSheet` |
+| Mood / energy | `mood`, `energy` (1–5) | same | Quick Log, iOS vitals sheet |
+| Meals | `meals` / `food_entries` | existing nutrition routes | Nutrition + iOS |
+| Workouts | `workouts`… | existing workout routes | Workouts + library |
 
 ## Connections
 
@@ -30,4 +33,4 @@ Log is an **all-in-one health home**, not a gym-only logger. Exercise library is
 
 ## Brand
 
-Charcoal surfaces + electric lime `#c6ff00` (web tokens `--lime*`, iOS `Palette.accent`).
+Charcoal surfaces + electric lime `#c6ff00` (web `--lime*`, iOS `Palette.accent`).

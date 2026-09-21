@@ -10,6 +10,10 @@ struct HealthView: View {
     @AppStorage(WeightUnit.storageKey) private var unitRaw = WeightUnit.kg.rawValue
     @State private var weightPulse = 0
     @State private var showSettings = false
+    @State private var loggingWeight = false
+    @State private var loggingSleep = false
+    @State private var loggingWater = false
+    @State private var loggingVitals = false
 
     private var unit: WeightUnit { WeightUnit(rawValue: unitRaw) ?? .kg }
     private var latestKg: Double? { weights.first?.kg ?? health.snapshot.weightKg }
@@ -39,6 +43,19 @@ struct HealthView: View {
 
                     weightHero
 
+                    HStack(spacing: 10) {
+                        Button("Weight") { loggingWeight = true }
+                            .buttonStyle(BlockButtonStyle(filled: true))
+                        Button("Sleep") { loggingSleep = true }
+                            .buttonStyle(BlockButtonStyle(filled: false))
+                    }
+                    HStack(spacing: 10) {
+                        Button("Water") { loggingWater = true }
+                            .buttonStyle(BlockButtonStyle(filled: false))
+                        Button("Vitals") { loggingVitals = true }
+                            .buttonStyle(BlockButtonStyle(filled: false))
+                    }
+
                     if weights.count >= 2 {
                         WeightChart(samples: weights, unit: unit)
                             .cardSurface(padding: 12)
@@ -65,6 +82,10 @@ struct HealthView: View {
                 }
             }
             .sheet(isPresented: $showSettings) { TrackingSettingsView() }
+            .sheet(isPresented: $loggingWeight) { LogWeightSheet() }
+            .sheet(isPresented: $loggingSleep) { LogSleepSheet() }
+            .sheet(isPresented: $loggingWater) { LogWaterSheet() }
+            .sheet(isPresented: $loggingVitals) { LogVitalsSheet() }
             .sensoryFeedback(.success, trigger: weightPulse)
         }
     }
