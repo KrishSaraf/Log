@@ -59,7 +59,7 @@ export default async function HealthPage() {
     <div className="space-y-8">
       <PageHeader
         title="Health"
-        description="Body readings over time."
+        description="Body readings, activity, and sleep over time."
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

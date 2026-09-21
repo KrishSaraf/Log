@@ -3,6 +3,8 @@ export * from "./auth";
 export * from "./exercises";
 export * from "./workouts";
 export * from "./health";
+export * from "./sleep";
 export * from "./nutrition";
+export * from "./connections";
 export * from "./questions";
 export * from "./insights";

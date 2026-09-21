@@ -19,7 +19,7 @@ export default function SignInPage() {
         Sign in to Log
       </h1>
       <p className="mt-2 text-center text-sm text-text-muted">
-        Your habits, workouts, and meals stay private to your account.
+        Activity, workouts, vitals, sleep, and meals — private to your account.
       </p>
 
       <div className="mt-8 space-y-3">
@@ -27,7 +27,7 @@ export default function SignInPage() {
           <button
             type="button"
             onClick={() => signIn("dev", { callbackUrl: "/" })}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-ember-line bg-ember-quiet px-4 text-sm font-medium text-text transition-colors hover:bg-surface-raised"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-lime-line bg-lime-quiet px-4 text-sm font-medium text-text transition-colors hover:bg-surface-raised"
           >
             Continue as Krish (local)
           </button>

@@ -16,11 +16,11 @@ export function Navbar({ onAddClick }: NavbarProps) {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow">
-            <Dumbbell className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-lime-300 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow">
+            <Dumbbell className="w-5 h-5 text-primary-foreground" />
           </div>
           <span className="font-display font-bold text-2xl tracking-tight">
-            Krish Workout<span className="text-primary">.</span>
+            Log<span className="text-primary">.</span>
           </span>
         </Link>
         

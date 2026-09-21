@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     default: "Log",
     template: "%s · Log",
   },
-  description: "Your health, training and lifestyle command center.",
+  description: "Your health home — activity, workouts, vitals, sleep, and nutrition.",
   applicationName: "Log",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

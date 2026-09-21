@@ -59,10 +59,10 @@ export function WeightTrend({
         <Line
           type="monotone"
           dataKey="kg"
-          stroke={CHART_COLORS.ember}
+          stroke={CHART_COLORS.lime}
           strokeWidth={1.75}
           dot={false}
-          activeDot={{ r: 3, fill: CHART_COLORS.ember, stroke: "none" }}
+          activeDot={{ r: 3, fill: CHART_COLORS.lime, stroke: "none" }}
         />
       </LineChart>
     </ChartFrame>

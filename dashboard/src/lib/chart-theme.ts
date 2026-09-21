@@ -6,18 +6,18 @@
  * the tokens in globals.css: if you change one, change both.
  */
 export const CHART_COLORS = {
-  ember: "#ff5a1f",
-  amber: "#efa24a",
-  sand: "#d9c7a3",
+  lime: "#c6ff00",
+  leaf: "#8fd14f",
+  mist: "#a8b3a0",
   steel: "#6e8091",
   ash: "#4a4a52",
 } as const;
 
 /** Ordered series ramp. Index 0 is the metric the page is actually about. */
 export const CHART_SERIES = [
-  CHART_COLORS.ember,
-  CHART_COLORS.amber,
-  CHART_COLORS.sand,
+  CHART_COLORS.lime,
+  CHART_COLORS.leaf,
+  CHART_COLORS.mist,
   CHART_COLORS.steel,
   CHART_COLORS.ash,
 ] as const;

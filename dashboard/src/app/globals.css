@@ -28,22 +28,22 @@
   --text-muted: #9a9aa3;
   --text-faint: #65656e;
 
-  /* The single accent: ember orange, carried over from the Krish Workout app. */
-  --ember: #ff5a1f;
-  --ember-bright: #ff7845;
-  --ember-quiet: oklch(0.69 0.2 38 / 14%);
-  --ember-line: oklch(0.69 0.2 38 / 32%);
-  --on-ember: #14100d;
+  /* The single accent: electric lime on charcoal. */
+  --lime: #c6ff00;
+  --lime-bright: #d9ff4a;
+  --lime-quiet: oklch(0.9 0.24 125 / 14%);
+  --lime-line: oklch(0.9 0.24 125 / 34%);
+  --on-lime: #0a0a0b;
 
   /* Direction of travel for a metric. Deliberately muted so they never
-     out-shout the ember accent. */
+     out-shout the lime accent. */
   --positive: #5fbf8c;
   --negative: #e2564b;
 
-  /* Chart series. Ember leads, the rest step away in warmth then temperature. */
-  --chart-1: #ff5a1f;
-  --chart-2: #efa24a;
-  --chart-3: #d9c7a3;
+  /* Chart series. Lime leads; companions stay cool charcoal-adjacent. */
+  --chart-1: #c6ff00;
+  --chart-2: #8fd14f;
+  --chart-3: #a8b3a0;
   --chart-4: #6e8091;
   --chart-5: #4a4a52;
   --grid: oklch(1 0 0 / 6%);
@@ -59,8 +59,8 @@
   --card-foreground: var(--text);
   --popover: var(--surface-raised);
   --popover-foreground: var(--text);
-  --primary: var(--ember);
-  --primary-foreground: var(--on-ember);
+  --primary: var(--lime);
+  --primary-foreground: var(--on-lime);
   --secondary: var(--surface-raised);
   --secondary-foreground: var(--text);
   --muted: var(--surface-raised);
@@ -70,15 +70,15 @@
   --destructive: var(--negative);
   --border: var(--line);
   --input: var(--line-strong);
-  --ring: var(--ember);
+  --ring: var(--lime);
   --sidebar: var(--surface-sunken);
   --sidebar-foreground: var(--text);
-  --sidebar-primary: var(--ember);
-  --sidebar-primary-foreground: var(--on-ember);
+  --sidebar-primary: var(--lime);
+  --sidebar-primary-foreground: var(--on-lime);
   --sidebar-accent: var(--surface-raised);
   --sidebar-accent-foreground: var(--text);
   --sidebar-border: var(--line);
-  --sidebar-ring: var(--ember);
+  --sidebar-ring: var(--lime);
 }
 
 @theme inline {
@@ -94,11 +94,11 @@
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-text-faint: var(--text-faint);
-  --color-ember: var(--ember);
-  --color-ember-bright: var(--ember-bright);
-  --color-ember-quiet: var(--ember-quiet);
-  --color-ember-line: var(--ember-line);
-  --color-on-ember: var(--on-ember);
+  --color-lime: var(--lime);
+  --color-lime-bright: var(--lime-bright);
+  --color-lime-quiet: var(--lime-quiet);
+  --color-lime-line: var(--lime-line);
+  --color-on-lime: var(--on-lime);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
   --color-grid: var(--grid);
@@ -186,7 +186,7 @@
   }
 
   ::selection {
-    background: var(--ember-quiet);
+    background: var(--lime-quiet);
     color: var(--text);
   }
 

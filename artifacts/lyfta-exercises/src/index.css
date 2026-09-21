@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'DM Sans', sans-serif;
   --font-display: 'Outfit', sans-serif;
 
   --color-background: hsl(var(--background));
@@ -24,36 +24,36 @@
 }
 
 :root {
-  /* Dark Mode Default Fitness Theme */
-  --background: 0 0% 4%;
-  --foreground: 0 0% 98%;
-  
-  --card: 0 0% 8%;
-  --card-foreground: 0 0% 98%;
-  
-  --popover: 0 0% 8%;
-  --popover-foreground: 0 0% 98%;
-  
-  /* Vibrant Energetic Orange/Red */
-  --primary: 15 100% 55%;
-  --primary-foreground: 0 0% 100%;
-  
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 0 0% 98%;
-  
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 60%;
-  
-  --accent: 15 100% 55%;
-  --accent-foreground: 0 0% 100%;
-  
-  --destructive: 0 84% 60%;
+  /* Charcoal + electric lime — shared Log brand */
+  --background: 240 6% 4%;
+  --foreground: 240 5% 93%;
+
+  --card: 240 6% 6%;
+  --card-foreground: 240 5% 93%;
+
+  --popover: 240 6% 6%;
+  --popover-foreground: 240 5% 93%;
+
+  /* Electric lime #c6ff00 */
+  --primary: 74 100% 50%;
+  --primary-foreground: 240 6% 4%;
+
+  --secondary: 240 5% 12%;
+  --secondary-foreground: 240 5% 93%;
+
+  --muted: 240 5% 10%;
+  --muted-foreground: 240 4% 60%;
+
+  --accent: 74 100% 50%;
+  --accent-foreground: 240 6% 4%;
+
+  --destructive: 0 72% 55%;
   --destructive-foreground: 0 0% 98%;
-  
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
-  --ring: 15 100% 55%;
-  
+
+  --border: 240 5% 14%;
+  --input: 240 5% 14%;
+  --ring: 74 100% 50%;
+
   --radius: 0.75rem;
 }
 
@@ -61,7 +61,7 @@
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   body {
     @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30 selection:text-primary-foreground min-h-screen overflow-x-hidden;
   }
@@ -76,13 +76,13 @@
   .glass-panel {
     @apply bg-card/80 backdrop-blur-xl border border-white/5 shadow-2xl shadow-black/50;
   }
-  
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60;
   }
-  
+
   .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-primary to-orange-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-primary to-lime-300;
   }
 
   .scrollbar-hide::-webkit-scrollbar {

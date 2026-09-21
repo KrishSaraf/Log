@@ -28,9 +28,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing weight value." }, { status: 400 });
     }
 
-    const source = body.source === "apple_health" || body.source === "import"
-      ? body.source
-      : "manual";
+    const source =
+      body.source === "apple_health" || body.source === "import"
+        ? body.source
+        : "manual";
 
     const [row] = await db
       .insert(healthMetrics)

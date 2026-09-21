@@ -2,26 +2,26 @@ import SwiftUI
 import UIKit
 
 enum Palette {
-    /// Warm night, closer to Productive than cold charcoal.
+    /// Charcoal surfaces, shared with the web dashboard.
     static let bg = Color.adaptive(
-        light: UIColor(red: 0.965, green: 0.953, blue: 0.933, alpha: 1),
-        dark: UIColor(red: 0.055, green: 0.055, blue: 0.07, alpha: 1)
+        light: UIColor(red: 0.965, green: 0.965, blue: 0.960, alpha: 1),
+        dark: UIColor(red: 0.039, green: 0.039, blue: 0.043, alpha: 1) // #0a0a0b
     )
     static let surface = Color.adaptive(
         light: UIColor.white,
-        dark: UIColor(red: 0.11, green: 0.11, blue: 0.14, alpha: 1)
+        dark: UIColor(red: 0.063, green: 0.063, blue: 0.071, alpha: 1) // #101012
     )
     static let ink = Color.adaptive(
-        light: UIColor(red: 0.122, green: 0.118, blue: 0.110, alpha: 1),
-        dark: UIColor(red: 0.957, green: 0.945, blue: 0.918, alpha: 1)
+        light: UIColor(red: 0.10, green: 0.10, blue: 0.11, alpha: 1),
+        dark: UIColor(red: 0.929, green: 0.929, blue: 0.937, alpha: 1) // #ededef
     )
     static let muted = Color.adaptive(
-        light: UIColor(red: 0.45, green: 0.43, blue: 0.40, alpha: 1),
-        dark: UIColor(red: 0.62, green: 0.60, blue: 0.55, alpha: 1)
+        light: UIColor(red: 0.45, green: 0.45, blue: 0.48, alpha: 1),
+        dark: UIColor(red: 0.604, green: 0.604, blue: 0.639, alpha: 1) // #9a9aa3
     )
     static let faint = Color.adaptive(
-        light: UIColor(red: 0.72, green: 0.70, blue: 0.66, alpha: 1),
-        dark: UIColor(red: 0.38, green: 0.37, blue: 0.34, alpha: 1)
+        light: UIColor(red: 0.70, green: 0.70, blue: 0.72, alpha: 1),
+        dark: UIColor(red: 0.396, green: 0.396, blue: 0.431, alpha: 1) // #65656e
     )
     static let line = Color.adaptive(
         light: UIColor(white: 0, alpha: 0.07),
@@ -32,17 +32,14 @@ enum Palette {
         dark: UIColor(white: 1, alpha: 0.14)
     )
 
-    /// Lavender, matching the habit-card chrome.
-    static let accent = Color.adaptive(
-        light: UIColor(red: 0.48, green: 0.42, blue: 0.98, alpha: 1),
-        dark: UIColor(red: 0.55, green: 0.49, blue: 1.00, alpha: 1)
-    )
-    static let onAccent = Color.white
+    /// Electric lime — the single accent across web + iOS.
+    static let accent = Color(red: 0.776, green: 1.0, blue: 0.0) // #c6ff00
+    static let onAccent = Color(red: 0.039, green: 0.039, blue: 0.043) // #0a0a0b
     static let rust = accent
 
-    static let move = Color(red: 0.91, green: 0.36, blue: 0.30)
-    static let exercise = Color(red: 0.45, green: 0.78, blue: 0.48)
-    static let stand = Color(red: 0.40, green: 0.74, blue: 0.86)
+    static let move = accent
+    static let exercise = Color(red: 0.561, green: 0.820, blue: 0.310) // #8fd14f
+    static let stand = Color(red: 0.431, green: 0.784, blue: 0.878) // #6ec8e0
 
     static let title = Font.system(.title3, design: .default).weight(.semibold)
 
