@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr";
 import { desc, eq } from "drizzle-orm";
@@ -64,7 +65,15 @@ export default async function InsightsPage() {
             <EmptyState
               icon={SparkleIcon}
               title="Nothing to report yet"
-              description="Insights need a few weeks of overlapping data. Keep logging workouts, meals and daily answers and they will start appearing."
+              description="Insights need overlapping workouts, meals, and sleep. Keep logging — patterns appear here first."
+              action={
+                <Link
+                  href="/"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+                >
+                  Back to Today
+                </Link>
+              }
             />
           ) : (
             <ul className="divide-y divide-line">

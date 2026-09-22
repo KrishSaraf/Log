@@ -17,24 +17,28 @@ export default async function ConnectionsPage() {
   const connections = await loadConnections(userId);
 
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-6 right-0 left-0 -z-10 h-40 bg-[radial-gradient(ellipse_at_top,rgba(198,241,53,0.07),transparent_60%)]"
+      />
       <PageHeader
         eyebrow="Integrations"
         title="Connections"
-        description="Apple Health on iPhone today. Health Connect and Google Fit stay ready for Android — same hub tables either way."
+        description="One hub for every source — Apple Health live on iPhone, Health Connect polished for Android, Google Fit as fallback."
       />
 
-      <Panel>
+      <Panel className="overflow-hidden reveal border-lime-line/20">
         <PanelHeader>
           <div className="min-w-0">
             <PanelTitle>Data sources</PanelTitle>
             <PanelDescription>
-              Apple Health is live on iOS. Health Connect and Google Fit are
-              wired as placeholders until the Android client lands.
+              Enable a source to claim it on your account. Native sync follows
+              from the phone clients into the same health_metrics tables.
             </PanelDescription>
           </div>
         </PanelHeader>
-        <PanelBody flush>
+        <PanelBody>
           <ConnectionsPanel initial={connections} />
         </PanelBody>
       </Panel>

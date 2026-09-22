@@ -163,7 +163,7 @@ export function ExerciseDetailModal({ exercise, onClose }: Props) {
                   <span className="text-base font-semibold text-white capitalize">{exercise.target}</span>
                 </div>
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5">
-                  <div className="flex items-center gap-1.5 text-orange-400 text-xs font-bold uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 text-primary text-xs font-bold uppercase tracking-wider">
                     <Dumbbell className="w-3.5 h-3.5" />
                     Equipment
                   </div>

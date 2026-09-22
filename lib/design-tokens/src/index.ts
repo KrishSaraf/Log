@@ -22,4 +22,14 @@ export const tokens = {
   tap: "--kw-tap",
 } as const;
 
+/** Literal brand values — keep in sync with tokens.css / dashboard / iOS. */
+export const brand = {
+  charcoal: "#0A0A0B",
+  surface: "#101012",
+  card: "#141416",
+  lime: "#C6F135",
+  onLime: "#0A0C08",
+  ink: "#EDEDEF",
+} as const;
+
 export type TokenName = (typeof tokens)[keyof typeof tokens];

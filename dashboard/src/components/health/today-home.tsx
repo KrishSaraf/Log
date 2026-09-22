@@ -15,13 +15,16 @@ import {
 
 import { ActivityRings } from "@/components/health/activity-rings";
 import { QuickLog } from "@/components/health/quick-log";
+import { TodayHabits } from "@/components/health/today-habits";
 import { ManualMealLogger } from "@/components/nutrition/manual-meal-logger";
 import { NutritionRings } from "@/components/nutrition/nutrition-rings";
 import { RecentMealList } from "@/components/nutrition/recent-meal-list";
+import { SampleMealButton } from "@/components/nutrition/sample-meal-button";
 import {
   EmptyState,
   MetricCard,
   Panel,
+  PanelActions,
   PanelBody,
   PanelDescription,
   PanelHeader,
@@ -36,6 +39,13 @@ import {
 import { NUTRITION_GOALS } from "@/lib/nutrition";
 import type { TodaySummary } from "@/lib/today";
 import { cn } from "@/lib/utils";
+
+const PROVIDER_LABEL: Record<TodaySummary["connections"][number]["provider"], string> = {
+  apple_health: "Apple Health",
+  health_connect: "Health Connect",
+  google_fit: "Google Fit",
+  manual_import: "Import",
+};
 
 const SHORTCUTS = [
   {
@@ -91,13 +101,15 @@ function greetingForHour(hour: number) {
 }
 
 export function TodayHome({ summary }: { summary: TodaySummary }) {
-  const { metrics, rings, recent, connectedCount, nutrition } = summary;
+  const { metrics, rings, recent, connectedCount, nutrition, connections, habits } =
+    summary;
   const hasActivity =
     metrics.activeCalories !== null ||
     metrics.exerciseMinutes !== null ||
     metrics.standHours !== null;
   const hour = new Date().getHours();
   const greeting = greetingForHour(hour);
+  const connectedSources = connections.filter((c) => c.status === "connected");
 
   const bp =
     metrics.bpSystolic != null && metrics.bpDiastolic != null
@@ -105,10 +117,17 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
       : null;
 
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-8 right-0 left-0 -z-10 h-56 bg-[radial-gradient(ellipse_at_top,rgba(198,241,53,0.09),transparent_65%)]"
+      />
+
       <header className="reveal space-y-2">
         <p className="label-caps text-lime">{greeting}</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-text sm:text-4xl">
+          <span className="text-lime">Log</span>
+          <span className="mx-2.5 text-text-faint/50">·</span>
           Today
         </h1>
         <p className="text-sm text-text-muted">{formatLongDate(summary.date)}</p>
@@ -190,11 +209,13 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           </PanelHeader>
           <PanelBody>
             <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
-              <NutritionRings
-                calories={nutrition.rings.calories}
-                protein={nutrition.rings.protein}
-                size={148}
-              />
+              <div className="ring-glow">
+                <NutritionRings
+                  calories={nutrition.rings.calories}
+                  protein={nutrition.rings.protein}
+                  size={148}
+                />
+              </div>
               <ul className="w-full min-w-0 space-y-3 text-sm">
                 <RingStat
                   label="Calories"
@@ -226,20 +247,62 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 />
               </ul>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link
-                href="/nutrition"
-                className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
-              >
-                Snap a meal
-              </Link>
-              <Link
-                href="/nutrition"
-                className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
-              >
-                Full nutrition
-              </Link>
+            {nutrition.mealsToday === 0 ? (
+              <div className="mt-5 space-y-3 border-t border-line pt-4">
+                <p className="text-xs leading-relaxed text-text-muted">
+                  Nothing on the plate yet — try a sample lunch to wake the
+                  rings, or snap a real meal.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <SampleMealButton />
+                  <Link
+                    href="/nutrition"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                  >
+                    Snap a meal
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link
+                  href="/nutrition"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+                >
+                  Snap a meal
+                </Link>
+                <Link
+                  href="/nutrition"
+                  className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                >
+                  Full nutrition
+                </Link>
+              </div>
+            )}
+          </PanelBody>
+        </Panel>
+      </section>
+
+      <section aria-label="Habits" className="reveal reveal-delay-2">
+        <Panel className="overflow-hidden">
+          <PanelHeader>
+            <div className="min-w-0">
+              <PanelTitle>Habits</PanelTitle>
+              <PanelDescription>
+                Today&apos;s ticks — tap to mark, heat shows the week
+              </PanelDescription>
             </div>
+            <PanelActions>
+              <Link
+                href="/log"
+                className="text-xs font-medium text-lime hover:underline"
+              >
+                Full chains
+              </Link>
+            </PanelActions>
+          </PanelHeader>
+          <PanelBody>
+            <TodayHabits date={summary.date} habits={habits} />
           </PanelBody>
         </Panel>
       </section>
@@ -253,25 +316,35 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           value={metrics.steps !== null ? Math.round(metrics.steps) : null}
           icon={PulseIcon}
         />
-        <MetricCard
-          label="Sleep"
-          value={
-            metrics.sleepMinutes !== null
-              ? formatDuration(metrics.sleepMinutes)
-              : null
-          }
-          icon={MoonIcon}
-        />
-        <MetricCard
-          label="Water"
-          value={
-            metrics.waterMl !== null
-              ? (metrics.waterMl / 1000).toFixed(1)
-              : null
-          }
-          unit="L"
-          icon={DropIcon}
-        />
+        <a href="#quick-log" className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <MetricCard
+            label="Sleep"
+            value={
+              metrics.sleepMinutes !== null
+                ? formatDuration(metrics.sleepMinutes)
+                : null
+            }
+            icon={MoonIcon}
+            footnote={
+              metrics.sleepMinutes === null ? "Tap to log last night" : undefined
+            }
+            className="h-full"
+          />
+        </a>
+        <a href="#quick-log" className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <MetricCard
+            label="Water"
+            value={
+              metrics.waterMl !== null
+                ? (metrics.waterMl / 1000).toFixed(1)
+                : null
+            }
+            unit="L"
+            icon={DropIcon}
+            footnote={metrics.waterMl === null ? "Tap to log glasses" : undefined}
+            className="h-full"
+          />
+        </a>
         <MetricCard
           label="Resting HR"
           value={
@@ -282,10 +355,28 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           unit="bpm"
           icon={HeartbeatIcon}
         />
+        <a href="#quick-log" className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <MetricCard
+            label="Weight"
+            value={
+              metrics.weightKg !== null ? formatKg(metrics.weightKg) : null
+            }
+            unit="kg"
+            icon={ScalesIcon}
+            footnote={
+              metrics.weightKg === null ? "Tap to log body metrics" : undefined
+            }
+            className="h-full"
+          />
+        </a>
         <MetricCard
-          label="Weight"
-          value={metrics.weightKg !== null ? formatKg(metrics.weightKg) : null}
-          unit="kg"
+          label="Body fat"
+          value={
+            metrics.bodyFatPct !== null
+              ? Math.round(metrics.bodyFatPct * 10) / 10
+              : null
+          }
+          unit="%"
           icon={ScalesIcon}
         />
         <MetricCard
@@ -353,7 +444,7 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             <div className="min-w-0">
               <PanelTitle>Log a meal</PanelTitle>
               <PanelDescription>
-                Manual path into hub.meals + food_entries
+                Name, type, macros — same record as a photo save
               </PanelDescription>
             </div>
           </PanelHeader>
@@ -362,7 +453,7 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
           </PanelBody>
         </Panel>
 
-        <Panel className="lg:col-span-5">
+        <Panel className="lg:col-span-5 overflow-hidden">
           <PanelHeader>
             <div className="min-w-0">
               <PanelTitle>Sources</PanelTitle>
@@ -374,15 +465,30 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             </div>
           </PanelHeader>
           <PanelBody>
-            <p className="text-sm leading-relaxed text-text-muted">
-              Pull activity, vitals, and sleep from Apple Health, Health
-              Connect, or Google Fit.
-            </p>
+            {connectedSources.length > 0 ? (
+              <ul className="mb-4 flex flex-wrap gap-2">
+                {connectedSources.map((c) => (
+                  <li
+                    key={c.provider}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-lime-line bg-lime-quiet px-2.5 py-1.5 text-xs font-medium text-lime"
+                  >
+                    <span className="size-1.5 rounded-full bg-lime" aria-hidden />
+                    {PROVIDER_LABEL[c.provider]}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mb-4 text-sm leading-relaxed text-text-muted">
+                Pull activity, vitals, and sleep from Apple Health, Health
+                Connect, or Google Fit.
+              </p>
+            )}
             <Link
               href="/settings/connections"
-              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
             >
-              Manage connections
+              <PlugsConnectedIcon size={16} weight="bold" aria-hidden />
+              {connectedCount === 0 ? "Connect a source" : "Manage connections"}
             </Link>
           </PanelBody>
         </Panel>
@@ -400,14 +506,17 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
             <EmptyState
               icon={ForkKnifeIcon}
               title="No meals yet"
-              description="Snap a plate or log macros — both use the dashboard nutrition model."
+              description="Snap a plate, log macros, or try a sample lunch to wake the rings."
               action={
-                <Link
-                  href="/nutrition"
-                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime"
-                >
-                  Open nutrition
-                </Link>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <SampleMealButton />
+                  <Link
+                    href="/nutrition"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                  >
+                    Open nutrition
+                  </Link>
+                </div>
               }
             />
           ) : (
@@ -425,19 +534,23 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
         </PanelBody>
       </Panel>
 
-      <Panel className="reveal reveal-delay-4">
+      <Panel id="log-vitals" className="reveal reveal-delay-4 scroll-mt-24">
         <PanelHeader>
           <div className="min-w-0">
             <PanelTitle>Log vitals</PanelTitle>
             <PanelDescription>
-              Weight, sleep, water, heart, mood — into health_metrics
+              Body, sleep, water, heart, mood — into health_metrics
             </PanelDescription>
           </div>
         </PanelHeader>
         <PanelBody>
           <QuickLog
+            id="quick-log"
             defaults={{
               weightKg: metrics.weightKg,
+              bodyFatPct: metrics.bodyFatPct,
+              waistCm: metrics.waistCm,
+              leanMassKg: metrics.leanMassKg,
               waterMl: metrics.waterMl,
               restingHeartRate: metrics.restingHeartRate,
               bpSystolic: metrics.bpSystolic,
@@ -464,6 +577,17 @@ export function TodayHome({ summary }: { summary: TodaySummary }) {
                 icon={PulseIcon}
                 title="Nothing logged yet"
                 description="Sessions, meals, and sleep nights will show up here."
+                action={
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <SampleMealButton label="Try a sample lunch" />
+                    <a
+                      href="#quick-log"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm text-text-muted transition-colors hover:border-lime-line hover:text-text"
+                    >
+                      Log sleep
+                    </a>
+                  </div>
+                }
               />
             ) : (
               <ul className="divide-y divide-line">

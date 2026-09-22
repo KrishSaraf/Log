@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 /**
  * Three concentric activity rings (Move / Exercise / Stand), mirroring the
- * iOS Today strip. Progress values are 0..1.
+ * iOS Today strip. Progress values are 0..1; animate in on mount.
  */
 export function ActivityRings({
   move,
@@ -18,6 +20,12 @@ export function ActivityRings({
   const line = Math.max(8, size * 0.125);
   const gap = Math.max(2.5, size * 0.04);
   const inset = line / 2;
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   return (
     <svg
@@ -28,7 +36,7 @@ export function ActivityRings({
       className="shrink-0"
     >
       {ring({
-        progress: move,
+        progress: ready ? move : 0,
         color: "var(--color-lime)",
         track: "var(--color-lime-quiet)",
         line,
@@ -36,7 +44,7 @@ export function ActivityRings({
         size,
       })}
       {ring({
-        progress: exercise,
+        progress: ready ? exercise : 0,
         color: "#8fd14f",
         track: "oklch(0.75 0.12 140 / 18%)",
         line,
@@ -44,7 +52,7 @@ export function ActivityRings({
         size,
       })}
       {ring({
-        progress: stand,
+        progress: ready ? stand : 0,
         color: "#6ec8e0",
         track: "oklch(0.75 0.08 220 / 18%)",
         line,
@@ -86,20 +94,19 @@ function ring({
         stroke={track}
         strokeWidth={line}
       />
-      {clamped > 0 ? (
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={line}
-          strokeLinecap="round"
-          strokeDasharray={`${c * clamped} ${c}`}
-          transform={`rotate(-90 ${cx} ${cy})`}
-          className="transition-[stroke-dasharray] duration-700 ease-out"
-        />
-      ) : null}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={line}
+        strokeLinecap="round"
+        strokeDasharray={`${c * clamped} ${c}`}
+        transform={`rotate(-90 ${cx} ${cy})`}
+        className="transition-[stroke-dasharray] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        style={{ opacity: clamped > 0.001 ? 1 : 0 }}
+      />
     </g>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ListChecksIcon, NotePencilIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { HabitChainBoard } from "@/components/habits/habit-chain";
+import { SeedHabitsButton } from "@/components/habits/seed-habits-button";
 import {
   EmptyState,
   PageHeader,
@@ -24,6 +25,8 @@ export default async function LogPage() {
   if (!userId) redirect("/sign-in");
 
   const data = await loadHabitsDashboard(userId);
+  const noHabits =
+    data.activeQuestions.length === 0 && data.questions.length === 0;
 
   return (
     <div className="space-y-8">
@@ -45,7 +48,8 @@ export default async function LogPage() {
               <EmptyState
                 icon={NotePencilIcon}
                 title="No habits yet"
-                description="Add the things worth tracking and they will appear here."
+                description="Seed the default set with a lived-in week, or add habits when you are ready."
+                action={<SeedHabitsButton />}
               />
             ) : (
               <ul className="divide-y divide-line">
@@ -78,6 +82,7 @@ export default async function LogPage() {
                 icon={ListChecksIcon}
                 title="Nothing set aside"
                 description="Habits you stop tracking will stay here so older days still make sense."
+                size="compact"
               />
             ) : (
               <ul className="divide-y divide-line">
@@ -115,11 +120,12 @@ export default async function LogPage() {
           </div>
         </PanelHeader>
         <PanelBody>
-          {data.activeQuestions.length === 0 && data.questions.length === 0 ? (
+          {noHabits ? (
             <EmptyState
               icon={ListChecksIcon}
               title="No days yet"
-              description="Mark a habit and the day will appear here."
+              description="Seed demo habits to see chains light up — or mark one when you are ready."
+              action={<SeedHabitsButton label="Seed demo week" />}
             />
           ) : (
             <HabitChainBoard

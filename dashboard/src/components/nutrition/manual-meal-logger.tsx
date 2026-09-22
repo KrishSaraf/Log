@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { CheckCircleIcon, CircleNotchIcon } from "@phosphor-icons/react";
 
 import { todayIso } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
 
 const fieldClass =
-  "mt-1.5 w-full rounded-lg border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-lime-line";
+  "mt-1.5 w-full rounded-lg border border-line bg-surface-raised px-3 py-2.5 text-sm text-text outline-none placeholder:text-text-faint transition-[border-color,box-shadow] focus:border-lime-line focus:shadow-[0_0_0_3px_var(--lime-quiet)]";
 
 /**
  * Manual meal entry against the existing `meals` + `food_entries` shape
@@ -18,6 +18,7 @@ const fieldClass =
  */
 export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
+  const nameRef = useRef<HTMLInputElement>(null);
   const [date, setDate] = useState(todayIso());
   const [name, setName] = useState("");
   const [mealType, setMealType] =
@@ -29,6 +30,12 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!saved) return;
+    const t = window.setTimeout(() => setSaved(false), 2400);
+    return () => window.clearTimeout(t);
+  }, [saved]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -71,6 +78,7 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
       setCarbs("");
       setFat("");
       router.refresh();
+      requestAnimationFrame(() => nameRef.current?.focus());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
     } finally {
@@ -89,7 +97,12 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
         </div>
       ) : null}
 
-      <div className={cn("grid gap-3", compact ? "sm:grid-cols-2" : "sm:grid-cols-2")}>
+      <div
+        className={cn(
+          "grid gap-3",
+          compact ? "sm:grid-cols-2" : "sm:grid-cols-2",
+        )}
+      >
         <label className="block text-xs font-medium text-text-muted">
           Date
           <input
@@ -100,27 +113,35 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
             required
           />
         </label>
-        <label className="block text-xs font-medium text-text-muted">
-          Type
-          <select
-            value={mealType}
-            onChange={(e) =>
-              setMealType(e.target.value as (typeof MEAL_TYPES)[number])
-            }
-            className={fieldClass}
-          >
-            {MEAL_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
+        <fieldset className="block">
+          <legend className="text-xs font-medium text-text-muted">Type</legend>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {MEAL_TYPES.map((t) => {
+              const on = mealType === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setMealType(t)}
+                  className={cn(
+                    "min-h-10 rounded-lg px-3 text-sm capitalize transition-colors",
+                    on
+                      ? "bg-lime text-on-lime"
+                      : "border border-line bg-surface-raised text-text-muted hover:border-lime-line hover:text-text",
+                  )}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
       </div>
 
       <label className="block text-xs font-medium text-text-muted">
         Name
         <input
+          ref={nameRef}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Chicken bowl"
@@ -147,6 +168,7 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
             type="number"
             inputMode="decimal"
             min="0"
+            step="0.1"
             value={protein}
             onChange={(e) => setProtein(e.target.value)}
             className={fieldClass}
@@ -158,6 +180,7 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
             type="number"
             inputMode="decimal"
             min="0"
+            step="0.1"
             value={carbs}
             onChange={(e) => setCarbs(e.target.value)}
             className={fieldClass}
@@ -169,6 +192,7 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
             type="number"
             inputMode="decimal"
             min="0"
+            step="0.1"
             value={fat}
             onChange={(e) => setFat(e.target.value)}
             className={fieldClass}
@@ -177,7 +201,12 @@ export function ManualMealLogger({ compact = false }: { compact?: boolean }) {
       </div>
 
       {error ? <p className="text-sm text-negative">{error}</p> : null}
-      {saved ? <p className="text-sm text-lime">Meal saved.</p> : null}
+      {saved ? (
+        <p className="flex items-center gap-1.5 text-sm text-lime">
+          <CheckCircleIcon size={16} weight="fill" aria-hidden />
+          Meal saved — rings will update.
+        </p>
+      ) : null}
 
       <button
         type="submit"

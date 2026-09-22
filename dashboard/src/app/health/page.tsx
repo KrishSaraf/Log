@@ -4,12 +4,12 @@ import {
   DropIcon,
   HeartbeatIcon,
   MoonIcon,
-  PulseIcon,
   ScalesIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
 import { MetricTrend } from "@/components/health/metric-trend";
 import { QuickLog } from "@/components/health/quick-log";
+import { SleepTrend } from "@/components/health/sleep-trend";
 import { WeightTrend } from "@/components/health/weight-trend";
 import {
   EmptyState,
@@ -21,6 +21,7 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/kit";
+import { SimpleSparkline } from "@/components/kit/simple-charts";
 import { getDashboardUserId } from "@/lib/auth-user";
 import { CHART_HEIGHT } from "@/lib/chart-theme";
 import { formatDuration, formatKg, formatShortDate, todayIso } from "@/lib/format";
@@ -65,14 +66,13 @@ export default async function HealthPage() {
     ),
   ]);
 
-  const sleepPoints: MetricPoint[] = sleepRows
+  const sleepTrend = [...sleepRows]
+    .reverse()
     .map((row) => ({
       date: row.date,
-      value: row.totalMinutes / 60,
-      unit: "hr",
-      source: row.source,
-    }))
-    .reverse();
+      hours: Math.round((row.totalMinutes / 60) * 10) / 10,
+      quality: row.quality,
+    }));
 
   const latestSleep = sleepRows[0] ?? null;
   const latestWater = water.at(-1) ?? null;
@@ -93,10 +93,13 @@ export default async function HealthPage() {
           value={data.latestWeight ? formatKg(data.latestWeight.kg) : null}
           unit="kg"
           icon={ScalesIcon}
+          sparkline={
+            <SimpleSparkline values={historyWeights.map((p) => p.kg)} />
+          }
           footnote={
             data.latestWeight
               ? formatShortDate(data.latestWeight.date)
-              : undefined
+              : "Log a weigh-in below"
           }
         />
         <MetricCard
@@ -110,7 +113,10 @@ export default async function HealthPage() {
               ? `${formatShortDate(latestSleep.date)}${
                   latestSleep.quality ? ` · Q${latestSleep.quality}` : ""
                 }`
-              : undefined
+              : "Log last night below"
+          }
+          sparkline={
+            <SimpleSparkline values={sleepTrend.map((p) => p.hours)} />
           }
         />
         <MetricCard
@@ -119,29 +125,38 @@ export default async function HealthPage() {
           unit="L"
           icon={DropIcon}
           footnote={
-            latestWater ? formatShortDate(latestWater.date) : undefined
+            latestWater
+              ? formatShortDate(latestWater.date)
+              : "Log glasses below"
           }
+          sparkline={<SimpleSparkline values={water.map((p) => p.value)} />}
         />
         <MetricCard
           label="Resting HR"
           value={latestHr ? Math.round(latestHr.value) : null}
           unit="bpm"
           icon={HeartbeatIcon}
-          footnote={latestHr ? formatShortDate(latestHr.date) : undefined}
+          footnote={
+            latestHr ? formatShortDate(latestHr.date) : "Log vitals below"
+          }
+          sparkline={
+            <SimpleSparkline values={restingHr.map((p) => p.value)} />
+          }
         />
       </div>
 
-      <Panel>
+      <Panel id="log-vitals" className="scroll-mt-24">
         <PanelHeader>
           <div className="min-w-0">
             <PanelTitle>Log a reading</PanelTitle>
             <PanelDescription>
-              Manual entries write to the same tables connected sources use.
+              Body, sleep, water, heart, mood — same tables connected sources use.
             </PanelDescription>
           </div>
         </PanelHeader>
         <PanelBody>
           <QuickLog
+            id="quick-log"
             defaults={{
               weightKg: data.latestWeight?.kg ?? null,
               waterMl: latestWater?.value ?? null,
@@ -170,20 +185,19 @@ export default async function HealthPage() {
           </PanelBody>
         </Panel>
 
-        <Panel>
+        <Panel className="overflow-hidden">
           <PanelHeader>
             <div className="min-w-0">
               <PanelTitle>Sleep</PanelTitle>
-              <PanelDescription>Hours per night</PanelDescription>
+              <PanelDescription>
+                {sleepTrend.length > 1
+                  ? `${formatShortDate(sleepTrend[0].date)} – ${formatShortDate(sleepTrend[sleepTrend.length - 1].date)}`
+                  : "Hours per night · quality tints"}
+              </PanelDescription>
             </div>
           </PanelHeader>
           <PanelBody>
-            <MetricTrend
-              points={sleepPoints}
-              label="Sleep"
-              unit="hr"
-              formatValue={(n) => n.toFixed(1)}
-            />
+            <SleepTrend points={sleepTrend} height={CHART_HEIGHT.default} />
           </PanelBody>
         </Panel>
 
@@ -202,7 +216,9 @@ export default async function HealthPage() {
               }))}
               label="Water"
               unit="L"
-              formatValue={(n) => n.toFixed(1)}
+              format="fixed1"
+              emptyHint="Water intake will plot here — log glasses above"
+              emptyCta="Log water"
             />
           </PanelBody>
         </Panel>
@@ -215,28 +231,34 @@ export default async function HealthPage() {
             </div>
           </PanelHeader>
           <PanelBody>
-            <MetricTrend points={restingHr} label="Resting HR" unit="bpm" />
+            <MetricTrend
+              points={restingHr}
+              label="Resting HR"
+              unit="bpm"
+              emptyHint="Resting heart rate will plot here — log vitals above"
+              emptyCta="Log heart rate"
+            />
           </PanelBody>
         </Panel>
       </div>
 
-      {mood.length > 0 ? (
-        <Panel>
-          <PanelHeader>
-            <div className="min-w-0">
-              <PanelTitle>Mood</PanelTitle>
-              <PanelDescription>1–5 self-report</PanelDescription>
-            </div>
-          </PanelHeader>
-          <PanelBody>
-            <MetricTrend
-              points={mood}
-              label="Mood"
-              height={CHART_HEIGHT.compact}
-            />
-          </PanelBody>
-        </Panel>
-      ) : null}
+      <Panel>
+        <PanelHeader>
+          <div className="min-w-0">
+            <PanelTitle>Mood</PanelTitle>
+            <PanelDescription>1–5 self-report</PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody>
+          <MetricTrend
+            points={mood}
+            label="Mood"
+            height={CHART_HEIGHT.compact}
+            emptyHint="Mood will plot here after a few check-ins"
+            emptyCta="Log mood"
+          />
+        </PanelBody>
+      </Panel>
 
       <Panel>
         <PanelHeader>
@@ -254,7 +276,15 @@ export default async function HealthPage() {
             <EmptyState
               icon={ScalesIcon}
               title="No weigh-ins yet"
-              description="Log weight from Today or the form above."
+              description="Log weight, body fat, waist, or lean mass from the form above."
+              action={
+                <a
+                  href="#quick-log"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-lime px-4 text-sm font-medium text-on-lime transition-opacity hover:opacity-90"
+                >
+                  Log body metrics
+                </a>
+              }
             />
           ) : (
             <ul className="max-h-[36rem] divide-y divide-line overflow-auto">
@@ -283,9 +313,17 @@ export default async function HealthPage() {
         <PanelBody flush>
           {sleepRows.length === 0 ? (
             <EmptyState
-              icon={PulseIcon}
+              icon={MoonIcon}
               title="No sleep logged"
-              description="Log last night from Today — hours, minutes, and quality."
+              description="Log last night — duration presets and a 1–5 quality score."
+              action={
+                <a
+                  href="#quick-log"
+                  className="inline-flex min-h-11 items-center rounded-lg border border-lime-line bg-lime-quiet px-4 text-sm font-medium text-lime transition-opacity hover:opacity-90"
+                >
+                  Log sleep
+                </a>
+              }
             />
           ) : (
             <ul className="max-h-[24rem] divide-y divide-line overflow-auto">

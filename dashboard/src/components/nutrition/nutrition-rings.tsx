@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 /**
  * Dual progress for calories + protein against soft daily goals.
  * Complements activity rings without inventing a new nutrition schema.
@@ -16,6 +18,12 @@ export function NutritionRings({
   const line = Math.max(8, size * 0.14);
   const gap = Math.max(3, size * 0.045);
   const inset = line / 2;
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   return (
     <svg
@@ -26,7 +34,7 @@ export function NutritionRings({
       className="shrink-0"
     >
       {ring({
-        progress: calories,
+        progress: ready ? calories : 0,
         color: "var(--color-lime)",
         track: "var(--color-lime-quiet)",
         line,
@@ -34,7 +42,7 @@ export function NutritionRings({
         size,
       })}
       {ring({
-        progress: protein,
+        progress: ready ? protein : 0,
         color: "#8fd14f",
         track: "oklch(0.75 0.12 140 / 18%)",
         line,
@@ -76,20 +84,19 @@ function ring({
         stroke={track}
         strokeWidth={line}
       />
-      {clamped > 0 ? (
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={line}
-          strokeLinecap="round"
-          strokeDasharray={`${c * clamped} ${c}`}
-          transform={`rotate(-90 ${cx} ${cy})`}
-          className="transition-[stroke-dasharray] duration-700 ease-out"
-        />
-      ) : null}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={line}
+        strokeLinecap="round"
+        strokeDasharray={`${c * clamped} ${c}`}
+        transform={`rotate(-90 ${cx} ${cy})`}
+        className="transition-[stroke-dasharray] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        style={{ opacity: clamped > 0.001 ? 1 : 0 }}
+      />
     </g>
   );
 }
