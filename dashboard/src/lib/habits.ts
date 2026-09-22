@@ -8,7 +8,8 @@ import {
   workoutExercises,
   workouts,
 } from "@/db";
-import { toNumber } from "@/lib/format";
+import { daysInclusive, longestStreakFromDates } from "@/lib/habit-chain";
+import { todayIso, toNumber } from "@/lib/format";
 import { safely } from "@/lib/safe-query";
 
 export type Tick = "yes" | "partial" | "no";
@@ -291,4 +292,35 @@ export function habitCompletion(data: HabitsDashboard, key: string) {
     }
   }
   return { logged, done };
+}
+
+export function habitBoardStats(data: HabitsDashboard) {
+  const keys = data.activeQuestions.map((question) => question.key);
+  const filledByKey: Record<string, string[]> = {};
+  let completions = 0;
+  let first: string | undefined;
+
+  for (const range of data.ranges) {
+    for (const day of range.days) {
+      if (!first || day.date < first) first = day.date;
+      for (const key of keys) {
+        const cell = day.cells[key];
+        if (!cell) continue;
+        if (cell.tick !== "yes" && cell.tick !== "partial") continue;
+        completions += 1;
+        (filledByKey[key] ??= []).push(day.date);
+      }
+    }
+  }
+
+  const until = todayIso();
+  const span = first && first <= until ? daysInclusive(first, until) : 0;
+  const expected = keys.length * span;
+  const rate = expected > 0 ? completions / expected : 0;
+  const best = keys.reduce(
+    (max, key) => Math.max(max, longestStreakFromDates(filledByKey[key] ?? [])),
+    0,
+  );
+
+  return { completions, rate, best };
 }

@@ -47,7 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/log",
     label: "Habits",
     icon: ListChecksIcon,
-    description: "Daily and weekly self-tracking questions",
+    description: "Mark the days you did them",
   },
   {
     href: "/insights",
