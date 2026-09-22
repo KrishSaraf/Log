@@ -1,20 +1,20 @@
 /**
- * Shared Log design tokens — charcoal + electric lime `#C6F135`.
- * Aligned with dashboard globals and iOS Palette.
+ * Krish Workout design tokens — dark-first gym UI.
+ * One energetic accent on charcoal/ink surfaces.
  */
 :root {
-  /* Surfaces — charcoal stack */
-  --kw-bg: #0a0a0b;
-  --kw-bg-elevated: #101012;
-  --kw-surface: #141416;
-  --kw-surface-hover: #1a1a1e;
-  --kw-ink: #ededef;
-  --kw-ink-muted: #9a9aa3;
-  --kw-ink-faint: #65656e;
+  /* Surfaces */
+  --kw-bg: #070809;
+  --kw-bg-elevated: #0e1012;
+  --kw-surface: #14171a;
+  --kw-surface-hover: #1a1e22;
+  --kw-ink: #f4f5f6;
+  --kw-ink-muted: #9aa3ad;
+  --kw-ink-faint: #5c6570;
   --kw-border: rgba(255, 255, 255, 0.08);
   --kw-border-strong: rgba(255, 255, 255, 0.14);
 
-  /* Accent — electric lime #C6F135 */
+  /* Accent — electric lime */
   --kw-accent: #c6f135;
   --kw-accent-hover: #d4f85a;
   --kw-accent-muted: rgba(198, 241, 53, 0.14);
@@ -56,7 +56,7 @@
   /* Motion */
   --kw-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --kw-duration: 180ms;
-  --kw-duration-slow: 280ms;
+  --kw-duration-slow: 240ms;
 
   /* Shadows */
   --kw-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);

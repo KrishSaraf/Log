@@ -1,173 +1,201 @@
-import { useState, useMemo } from "react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Filters } from "@/components/exercises/Filters";
-import { ExerciseCard } from "@/components/exercises/ExerciseCard";
-import { ExerciseDetailModal } from "@/components/exercises/ExerciseDetailModal";
-import { ExerciseFormModal } from "@/components/exercises/ExerciseFormModal";
-import { useListExercises, useGetExerciseFilters } from "@/hooks/use-exercises";
-import { Loader2, ChevronLeft, ChevronRight, Activity, Dumbbell } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Exercise } from "@workspace/api-client-react";
-import { motion } from "framer-motion";
+import { Header } from "@/components/Header";
+import { Filters } from "@/components/Filters";
+import { ExerciseCard } from "@/components/ExerciseCard";
+import { ExerciseDetail } from "@/components/ExerciseDetail";
+import { ExerciseForm } from "@/components/ExerciseForm";
+import {
+  useListExercises,
+  useGetExerciseFilters,
+  useDeleteExercise,
+} from "@/hooks/use-exercises";
+import { Button, EmptyState, Skeleton } from "@/components/primitives";
 
-// Simple debounce hook implementation inline
-function useDebounceValue<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  useMemo(() => {
-    const handler = setTimeout(() => { setDebouncedValue(value); }, delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
+function useDebounced<T>(value: T, ms: number): T {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return v;
 }
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounceValue(search, 300);
+  const debouncedSearch = useDebounced(search, 280);
   const [bodyPart, setBodyPart] = useState("");
   const [equipment, setEquipment] = useState("");
+  const [target, setTarget] = useState("");
   const [page, setPage] = useState(1);
 
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [formModalOpen, setFormModalOpen] = useState(false);
-  const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
+  const [selected, setSelected] = useState<Exercise | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Exercise | null>(null);
 
-  const { data: filtersData } = useGetExerciseFilters();
-  
-  const { data: exercisesData, isLoading, isError } = useListExercises({
-    search: debouncedSearch,
-    bodyPart,
-    equipment,
+  const { data: filters } = useGetExerciseFilters();
+  const { data, isLoading, isError, refetch, isFetching } = useListExercises({
+    search: debouncedSearch || undefined,
+    bodyPart: bodyPart || undefined,
+    equipment: equipment || undefined,
+    target: target || undefined,
     page,
-    limit: 24
+    limit: 24,
   });
+  const del = useDeleteExercise();
 
-  const bodyParts = filtersData?.bodyParts || [
-    "back", "cardio", "chest", "lower arms", "lower legs", 
-    "neck", "shoulders", "upper arms", "upper legs", "waist"
-  ];
-  
-  const equipments = filtersData?.equipment || [
-    "assisted", "band", "barbell", "body weight", "cable", 
-    "dumbbell", "ez barbell", "kettlebell", "leverage machine", 
-    "medicine ball", "resistance band", "smith machine", "stability ball"
-  ];
-
-  const handleEdit = (ex: Exercise) => {
-    setSelectedExercise(null);
-    setExerciseToEdit(ex);
-    setFormModalOpen(true);
-  };
-
-  const handleCreate = () => {
-    setExerciseToEdit(null);
-    setFormModalOpen(true);
+  const resetPage = <T,>(setter: (v: T) => void) => (v: T) => {
+    setter(v);
+    setPage(1);
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Background Decor */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <img 
-          src={`${import.meta.env.BASE_URL}images/hero-bg.png`} 
-          alt="Atmosphere" 
-          className="w-full h-full object-cover opacity-20 mix-blend-overlay"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/90 to-background" />
-      </div>
-
-      <div className="relative z-10 flex flex-col flex-1">
-        <Navbar onAddClick={handleCreate} />
-        
-        <Filters 
-          search={search} setSearch={(v) => { setSearch(v); setPage(1); }}
-          selectedBodyPart={bodyPart} setSelectedBodyPart={(v) => { setBodyPart(v); setPage(1); }}
-          selectedEquipment={equipment} setSelectedEquipment={(v) => { setEquipment(v); setPage(1); }}
-          bodyParts={bodyParts}
-          equipment={equipments}
-        />
-
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl md:text-3xl font-display font-bold">
-              <span className="text-gradient">Exercise</span> Library
-            </h1>
-            {!isLoading && exercisesData && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm font-medium text-white/70">
-                <Activity className="w-4 h-4 text-primary" />
-                {exercisesData.total} results
-              </div>
-            )}
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="bg-card rounded-2xl border border-white/5 aspect-[4/5] animate-pulse relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent" />
-                </div>
-              ))}
-            </div>
-          ) : isError ? (
-            <div className="text-center py-20 bg-card rounded-2xl border border-white/5">
-              <p className="text-destructive font-medium text-lg">Failed to load exercises.</p>
-              <p className="text-muted-foreground mt-2">The API endpoint might be missing.</p>
-            </div>
-          ) : exercisesData?.exercises?.length === 0 ? (
-            <div className="text-center py-32 bg-card rounded-3xl border border-white/5 flex flex-col items-center">
-              <Dumbbell className="w-16 h-16 text-white/10 mb-4" />
-              <h3 className="text-xl font-display font-bold text-white mb-2">No exercises found</h3>
-              <p className="text-white/50 max-w-md mx-auto">Try adjusting your filters or searching for something else.</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {exercisesData?.exercises.map((exercise, idx) => (
-                  <ExerciseCard 
-                    key={exercise.id} 
-                    exercise={exercise} 
-                    index={idx}
-                    onClick={setSelectedExercise}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {exercisesData && exercisesData.totalPages > 1 && (
-                <div className="mt-12 flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="p-3 rounded-xl bg-card border border-white/10 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-white"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <span className="font-medium text-white/70">
-                    Page <span className="text-white">{page}</span> of {exercisesData.totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage(p => Math.min(exercisesData.totalPages, p + 1))}
-                    disabled={page === exercisesData.totalPages}
-                    className="p-3 rounded-xl bg-card border border-white/10 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-white"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </main>
-      </div>
-
-      <ExerciseDetailModal 
-        exercise={selectedExercise} 
-        onClose={() => setSelectedExercise(null)} 
-        onEdit={handleEdit}
+    <div className="min-h-dvh flex flex-col">
+      <Header
+        onAdd={() => {
+          setEditing(null);
+          setFormOpen(true);
+        }}
       />
 
-      <ExerciseFormModal 
-        isOpen={formModalOpen} 
-        onClose={() => setFormModalOpen(false)} 
-        exerciseToEdit={exerciseToEdit}
+      <Filters
+        search={search}
+        onSearch={resetPage(setSearch)}
+        bodyPart={bodyPart}
+        onBodyPart={resetPage(setBodyPart)}
+        equipment={equipment}
+        onEquipment={resetPage(setEquipment)}
+        target={target}
+        onTarget={resetPage(setTarget)}
+        bodyParts={filters?.bodyParts ?? []}
+        equipmentList={filters?.equipment ?? []}
+        targets={filters?.targets ?? []}
+      />
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <p className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+              Library
+            </p>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Exercises
+            </h1>
+          </div>
+          {!isLoading && data ? (
+            <div className="text-right">
+              <div className="font-display text-2xl sm:text-3xl font-extrabold tabular-nums text-accent leading-none">
+                {data.total.toLocaleString()}
+              </div>
+              <div className="mt-1 text-[10px] text-faint uppercase tracking-wider">
+                {isFetching ? "Updating…" : "results"}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-[4/5]" />
+            ))}
+          </div>
+        ) : isError ? (
+          <EmptyState
+            title="Couldn’t load exercises"
+            description="Check that the API is running and the database is seeded."
+            action={
+              <Button onClick={() => refetch()}>Try again</Button>
+            }
+          />
+        ) : !data?.exercises.length ? (
+          <EmptyState
+            title="No exercises found"
+            description="Try a different search or clear your filters."
+            action={
+              <Button
+                variant="surface"
+                onClick={() => {
+                  setSearch("");
+                  setBodyPart("");
+                  setEquipment("");
+                  setTarget("");
+                }}
+              >
+                Clear filters
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {data.exercises.map((ex, i) => (
+                <ExerciseCard
+                  key={ex.id}
+                  exercise={ex}
+                  index={i}
+                  onOpen={setSelected}
+                />
+              ))}
+            </div>
+
+            {data.totalPages > 1 ? (
+              <div className="mt-10 flex items-center justify-center gap-4">
+                <Button
+                  variant="surface"
+                  className="px-3"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="size-5" />
+                </Button>
+                <span className="text-sm text-muted tabular-nums">
+                  <span className="font-semibold text-foreground">{page}</span>
+                  {" / "}
+                  {data.totalPages}
+                </span>
+                <Button
+                  variant="surface"
+                  className="px-3"
+                  disabled={page >= data.totalPages}
+                  onClick={() =>
+                    setPage((p) => Math.min(data.totalPages, p + 1))
+                  }
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="size-5" />
+                </Button>
+              </div>
+            ) : null}
+          </>
+        )}
+      </main>
+
+      <ExerciseDetail
+        exercise={selected}
+        onClose={() => setSelected(null)}
+        onEdit={(ex) => {
+          setSelected(null);
+          setEditing(ex);
+          setFormOpen(true);
+        }}
+        onDelete={(ex) => {
+          if (!confirm(`Delete “${ex.name}”?`)) return;
+          del.mutate(
+            { id: ex.id },
+            {
+              onSuccess: () => setSelected(null),
+            },
+          );
+        }}
+      />
+
+      <ExerciseForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        exercise={editing}
       />
     </div>
   );

@@ -1,104 +1,61 @@
 import { db } from "@workspace/db";
 import { exercisesTable } from "@workspace/db/schema";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
+import { resolve } from "path";
 
-const IMAGE_BASE = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises";
-
-// Images are at: IMAGE_BASE/{exercise.id}/{number}.jpg
-// e.g. exercises/3_4_Sit-Up/0.jpg
-
-const EQUIPMENT_MAP: Record<string, string> = {
-  "body only": "body weight",
-  "barbell": "barbell",
-  "dumbbell": "dumbbell",
-  "cable": "cable",
-  "machine": "leverage machine",
-  "kettlebells": "kettlebell",
-  "bands": "resistance band",
-  "e-z curl bar": "ez barbell",
-  "exercise ball": "stability ball",
-  "foam roll": "roller",
-  "medicine ball": "medicine ball",
-  "other": "body weight",
-};
-
-const MUSCLE_TO_BODY_PART: Record<string, string> = {
-  abdominals: "waist",
-  abductors: "hips",
-  adductors: "hips",
-  biceps: "upper arms",
-  calves: "lower legs",
-  chest: "chest",
-  forearms: "lower arms",
-  glutes: "hips",
-  hamstrings: "upper legs",
-  lats: "back",
-  "lower back": "back",
-  "middle back": "back",
-  neck: "neck",
-  quadriceps: "upper legs",
-  shoulders: "shoulders",
-  traps: "back",
-  triceps: "upper arms",
-};
-
-interface RawExercise {
+interface SeedExercise {
   id: string;
   name: string;
-  category: string;
-  equipment: string | null;
-  primaryMuscles: string[];
-  secondaryMuscles: string[];
-  instructions: string[];
-  images: string[];
-  level: string;
-  force: string | null;
-  mechanic: string | null;
+  bodyPart: string;
+  equipment: string;
+  target: string;
+  level?: string;
+  gifUrl?: string;
+  images?: string[];
+  instructions?: string[];
+  secondaryMuscles?: string[];
+}
+
+function resolveSeedPath(): string {
+  const fromEnv = process.env.EXERCISES_JSON;
+  if (fromEnv && existsSync(fromEnv)) return fromEnv;
+
+  const candidates = [
+    resolve(process.cwd(), "ios/Log/Resources/exercises.json"),
+    resolve(process.cwd(), "../ios/Log/Resources/exercises.json"),
+    resolve(import.meta.dirname, "../../ios/Log/Resources/exercises.json"),
+    "/tmp/exercises.json",
+  ];
+  const found = candidates.find((p) => existsSync(p));
+  if (!found) {
+    throw new Error(
+      "No exercises.json found. Set EXERCISES_JSON or place data at ios/Log/Resources/exercises.json",
+    );
+  }
+  return found;
 }
 
 async function seed() {
-  const rawData = readFileSync("/tmp/exercises.json", "utf-8");
-  const rawExercises: RawExercise[] = JSON.parse(rawData);
+  const path = resolveSeedPath();
+  console.log(`Seeding from ${path}`);
+  const raw: SeedExercise[] = JSON.parse(readFileSync(path, "utf-8"));
+  console.log(`Processing ${raw.length} exercises...`);
 
-  console.log(`Processing ${rawExercises.length} exercises...`);
-
-  // Clear old data
   await db.delete(exercisesTable);
 
-  const rows = rawExercises.map((ex) => {
-    const primaryMuscle = ex.primaryMuscles[0] ?? "other";
-    const bodyPart =
-      ex.category === "cardio"
-        ? "cardio"
-        : MUSCLE_TO_BODY_PART[primaryMuscle] ?? "back";
+  const rows = raw.map((ex) => ({
+    id: ex.id,
+    name: ex.name,
+    bodyPart: ex.bodyPart,
+    equipment: ex.equipment,
+    gifUrl: ex.gifUrl ?? ex.images?.[0] ?? "",
+    target: ex.target,
+    secondaryMuscles: ex.secondaryMuscles ?? [],
+    instructions: ex.instructions ?? [],
+    images: ex.images ?? (ex.gifUrl ? [ex.gifUrl] : []),
+    level: ex.level ?? "beginner",
+  }));
 
-    const equipment = ex.equipment
-      ? (EQUIPMENT_MAP[ex.equipment] ?? ex.equipment)
-      : "body weight";
-
-    // Images are stored as "ExerciseId/0.jpg" relative to the exercises folder
-    // Full URL: IMAGE_BASE/ExerciseId/0.jpg
-    const gifUrl = ex.images.length > 0
-      ? `${IMAGE_BASE}/${ex.images[0]}`
-      : "";
-
-    const allImages = ex.images.map((img) => `${IMAGE_BASE}/${img}`);
-
-    return {
-      id: ex.id,
-      name: ex.name,
-      bodyPart,
-      equipment,
-      gifUrl,
-      target: primaryMuscle,
-      secondaryMuscles: ex.secondaryMuscles,
-      instructions: ex.instructions,
-      images: allImages,
-      level: ex.level ?? "beginner",
-    };
-  });
-
-  // Insert in batches
   const batchSize = 100;
   for (let i = 0; i < rows.length; i += batchSize) {
     const batch = rows.slice(i, i + batchSize);
@@ -106,7 +63,12 @@ async function seed() {
     console.log(`Inserted ${Math.min(i + batchSize, rows.length)}/${rows.length}`);
   }
 
-  console.log("✅ Done! All exercises seeded with real images.");
+  console.log("✅ Done! Exercise library seeded.");
 }
 
-seed().catch(console.error).finally(() => process.exit(0));
+seed()
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  })
+  .finally(() => process.exit(0));
