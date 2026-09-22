@@ -1,0 +1,19 @@
+{
+  "name": "Log / Krish Workout",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "api-server",
+      "command": "bash .cursor/dev.sh api-server"
+    },
+    {
+      "name": "web (lyfta-exercises)",
+      "command": "bash .cursor/dev.sh web"
+    },
+    {
+      "name": "dashboard (next)",
+      "command": "bash .cursor/dev.sh dashboard"
+    }
+  ]
+}
