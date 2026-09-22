@@ -1,10 +1,47 @@
 import { NextResponse } from "next/server";
 
-import { db, healthMetrics } from "@/db";
 import { authErrorResponse, requireUserId } from "@/lib/auth-user";
-import { todayIso, toNumber } from "@/lib/format";
+import { toNumber } from "@/lib/format";
+import {
+  loadMetricSeries,
+  parseIsoDate,
+  upsertHealthMetric,
+} from "@/lib/health-log";
+import type { Source } from "@/db";
 
 export const runtime = "nodejs";
+
+const SOURCES = new Set<Source>(["manual", "photo", "import", "apple_health"]);
+
+export async function GET(req: Request) {
+  try {
+    const userId = await requireUserId(req);
+    const url = new URL(req.url);
+    const metric = url.searchParams.get("metric")?.trim();
+    if (!metric) {
+      return NextResponse.json(
+        { error: "Pass ?metric=weight_kg (or another key)." },
+        { status: 400 },
+      );
+    }
+    const from = url.searchParams.get("from") ?? undefined;
+    const to = url.searchParams.get("to") ?? undefined;
+    const limit = Number(url.searchParams.get("limit") ?? 180);
+    const points = await loadMetricSeries({
+      userId,
+      metric,
+      from,
+      to,
+      limit: Number.isFinite(limit) ? limit : 180,
+    });
+    return NextResponse.json({ metric, points });
+  } catch (err) {
+    return (
+      authErrorResponse(err) ??
+      NextResponse.json({ error: "Could not load metrics." }, { status: 500 })
+    );
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -15,58 +52,56 @@ export async function POST(req: Request) {
       value?: number | string;
       metric?: string;
       unit?: string | null;
-      source?: "manual" | "import" | "apple_health";
+      source?: Source;
+      /** Convenience: log several metrics in one request. */
+      entries?: Array<{
+        metric: string;
+        value: number | string;
+        unit?: string | null;
+        date?: string;
+      }>;
     };
+
+    if (Array.isArray(body.entries) && body.entries.length > 0) {
+      const saved = [];
+      for (const entry of body.entries) {
+        const value = toNumber(entry.value);
+        if (value === null || !entry.metric?.trim()) continue;
+        saved.push(
+          await upsertHealthMetric({
+            userId,
+            date: parseIsoDate(entry.date ?? body.date),
+            metric: entry.metric.trim(),
+            value,
+            unit: entry.unit,
+            source:
+              body.source && SOURCES.has(body.source) ? body.source : "manual",
+          }),
+        );
+      }
+      if (saved.length === 0) {
+        return NextResponse.json({ error: "No valid entries." }, { status: 400 });
+      }
+      return NextResponse.json({ entries: saved });
+    }
 
     const metric = body.metric?.trim() || "weight_kg";
     const raw = body.kg ?? body.value;
     const value = toNumber(raw ?? null);
-    const date =
-      body.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : todayIso();
-
     if (value === null) {
-      return NextResponse.json({ error: "Missing weight value." }, { status: 400 });
+      return NextResponse.json({ error: "Missing value." }, { status: 400 });
     }
 
-    const source = body.source === "apple_health" || body.source === "import"
-      ? body.source
-      : "manual";
-
-    const [row] = await db
-      .insert(healthMetrics)
-      .values({
-        userId,
-        date,
-        metric,
-        value: String(value),
-        unit: body.unit ?? (metric === "weight_kg" ? "kg" : null),
-        source,
-      })
-      .onConflictDoUpdate({
-        target: [
-          healthMetrics.userId,
-          healthMetrics.date,
-          healthMetrics.metric,
-          healthMetrics.source,
-        ],
-        set: {
-          value: String(value),
-          unit: body.unit ?? (metric === "weight_kg" ? "kg" : null),
-        },
-      })
-      .returning({
-        id: healthMetrics.id,
-        date: healthMetrics.date,
-        metric: healthMetrics.metric,
-        value: healthMetrics.value,
-      });
-
-    return NextResponse.json({
-      id: row.id,
-      date: row.date,
-      metric: row.metric,
-      value: toNumber(row.value),
+    const row = await upsertHealthMetric({
+      userId,
+      date: parseIsoDate(body.date),
+      metric,
+      value,
+      unit: body.unit,
+      source: body.source && SOURCES.has(body.source) ? body.source : "manual",
     });
+
+    return NextResponse.json(row);
   } catch (err) {
     return (
       authErrorResponse(err) ??

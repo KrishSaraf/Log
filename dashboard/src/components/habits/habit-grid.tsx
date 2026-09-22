@@ -26,7 +26,7 @@ function TickMark({ cell }: { cell: HabitCell | undefined }) {
   if (cell.tick === "yes") {
     return (
       <span
-        className="flex size-3.5 items-center justify-center rounded-full bg-ember text-on-ember"
+        className="flex size-3.5 items-center justify-center rounded-full bg-lime text-on-lime"
         aria-hidden
       >
         <CheckIcon size={10} weight="bold" />
@@ -36,7 +36,7 @@ function TickMark({ cell }: { cell: HabitCell | undefined }) {
   if (cell.tick === "partial") {
     return (
       <span
-        className="flex size-3.5 items-center justify-center rounded-full border border-ember-line bg-ember-quiet text-ember"
+        className="flex size-3.5 items-center justify-center rounded-full border border-lime-line bg-lime-quiet text-lime"
         aria-hidden
       >
         <MinusIcon size={10} weight="bold" />
@@ -153,8 +153,8 @@ export function HabitGrid({
       <ChartLegend
         className="px-1"
         items={[
-          { label: "Done", color: CHART_COLORS.ember },
-          { label: "Partly", color: CHART_COLORS.amber },
+          { label: "Done", color: CHART_COLORS.lime },
+          { label: "Partly", color: CHART_COLORS.leaf },
           { label: "Not done", color: CHART_COLORS.ash },
         ]}
       />

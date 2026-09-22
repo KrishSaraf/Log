@@ -30,6 +30,12 @@ export function AccountMenu() {
         {data.user.email ? (
           <p className="truncate text-[10px] text-text-faint">{data.user.email}</p>
         ) : null}
+        <Link
+          href="/settings/connections"
+          className="mt-1 block text-[10px] font-medium text-lime hover:underline"
+        >
+          Connections
+        </Link>
       </div>
       <button
         type="button"

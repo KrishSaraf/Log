@@ -33,6 +33,13 @@ export const HEALTH_METRICS = [
   "waist_cm",
   "distance_m",
   "flights_climbed",
+  /** Manual / connected daily totals */
+  "water_ml",
+  "blood_pressure_systolic",
+  "blood_pressure_diastolic",
+  /** 1–5 self-report scales */
+  "mood",
+  "energy",
 ] as const;
 
 export type HealthMetricKey = (typeof HEALTH_METRICS)[number] | (string & {});

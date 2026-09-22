@@ -44,7 +44,7 @@ export function ExerciseCard({
       onMouseLeave={() => setHovered(false)}
       className={cn(
         "group flex flex-col overflow-hidden rounded-lg border border-line bg-surface text-left",
-        "transition-colors duration-150 hover:border-ember-line",
+        "transition-colors duration-150 hover:border-lime-line",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
       )}
     >
@@ -70,7 +70,7 @@ export function ExerciseCard({
           <span className="rounded-md border border-white/10 bg-black/65 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-white/90 uppercase">
             {exercise.bodyPart}
           </span>
-          <span className="rounded-md border border-ember-line bg-ember/85 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-on-ember uppercase">
+          <span className="rounded-md border border-lime-line bg-lime/85 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-on-lime uppercase">
             {exercise.equipment}
           </span>
         </div>
@@ -82,7 +82,7 @@ export function ExerciseCard({
                 key={i}
                 className={cn(
                   "h-0.5 flex-1 rounded-full",
-                  i === frame % images.length ? "bg-ember" : "bg-white/25",
+                  i === frame % images.length ? "bg-lime" : "bg-white/25",
                 )}
               />
             ))}

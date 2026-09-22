@@ -49,7 +49,7 @@ function FilterChip({
         "shrink-0 rounded-md border px-2.5 py-1 text-xs capitalize transition-colors duration-150",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         active
-          ? "border-ember-line bg-ember-quiet font-medium text-text"
+          ? "border-lime-line bg-lime-quiet font-medium text-text"
           : "border-line text-text-muted hover:border-line-strong hover:text-text",
       )}
     >

@@ -37,7 +37,7 @@ export function WorkoutSectionTabs() {
                 {active ? (
                   <span
                     aria-hidden
-                    className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-ember"
+                    className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-lime"
                   />
                 ) : null}
               </Link>

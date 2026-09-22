@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 const LEVEL_TONE: Record<string, string> = {
   beginner: "border-positive/30 bg-positive/10 text-positive",
-  intermediate: "border-ember-line bg-ember-quiet text-ember-bright",
+  intermediate: "border-lime-line bg-lime-quiet text-lime-bright",
   expert: "border-negative/30 bg-negative/10 text-negative",
 };
 
@@ -111,7 +111,7 @@ export function ExerciseDetail({
                         aria-label={`Photo ${i + 1}`}
                         className={cn(
                           "h-1.5 rounded-full transition-all",
-                          i === frame ? "w-5 bg-ember" : "w-1.5 bg-line-strong",
+                          i === frame ? "w-5 bg-lime" : "w-1.5 bg-line-strong",
                         )}
                       />
                     ))}
@@ -168,7 +168,7 @@ export function ExerciseDetail({
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg border border-line bg-surface-sunken p-3">
                   <p className="label-caps flex items-center gap-1.5">
-                    <TargetIcon size={12} className="text-ember" aria-hidden />
+                    <TargetIcon size={12} className="text-lime" aria-hidden />
                     Target
                   </p>
                   <p className="mt-1.5 text-sm font-medium capitalize text-text">
@@ -177,7 +177,7 @@ export function ExerciseDetail({
                 </div>
                 <div className="rounded-lg border border-line bg-surface-sunken p-3">
                   <p className="label-caps flex items-center gap-1.5">
-                    <BarbellIcon size={12} className="text-ember" aria-hidden />
+                    <BarbellIcon size={12} className="text-lime" aria-hidden />
                     Equipment
                   </p>
                   <p className="mt-1.5 text-sm font-medium capitalize text-text">
@@ -208,7 +208,7 @@ export function ExerciseDetail({
                   <ol className="space-y-3">
                     {exercise.instructions.map((step, index) => (
                       <li key={index} className="flex gap-3">
-                        <span className="num mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-ember-quiet text-micro font-medium text-ember">
+                        <span className="num mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-lime-quiet text-micro font-medium text-lime">
                           {index + 1}
                         </span>
                         <p className="text-sm leading-relaxed text-text-muted">

@@ -41,13 +41,13 @@ export function Sidebar() {
                 {active ? (
                   <span
                     aria-hidden
-                    className="absolute top-1/2 left-0 h-4 w-[2px] -translate-y-1/2 rounded-full bg-ember"
+                    className="absolute top-1/2 left-0 h-4 w-[2px] -translate-y-1/2 rounded-full bg-lime"
                   />
                 ) : null}
                 <Icon
                   size={17}
                   weight={active ? "fill" : "regular"}
-                  className={cn("shrink-0", active ? "text-ember" : "text-text-faint")}
+                  className={cn("shrink-0", active ? "text-lime" : "text-text-faint")}
                   aria-hidden
                 />
                 {item.label}
@@ -86,14 +86,14 @@ export function MobileNav() {
                   className={cn(
                     "flex min-h-11 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors duration-150",
                     active
-                      ? "border-ember-line bg-ember-quiet font-medium text-text"
+                      ? "border-lime-line bg-lime-quiet font-medium text-text"
                       : "border-line text-text-muted hover:text-text",
                   )}
                 >
                   <Icon
                     size={16}
                     weight={active ? "fill" : "regular"}
-                    className={active ? "text-ember" : "text-text-faint"}
+                    className={active ? "text-lime" : "text-text-faint"}
                     aria-hidden
                   />
                   {item.label}

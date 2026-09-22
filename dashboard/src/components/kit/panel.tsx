@@ -43,7 +43,10 @@ function PanelTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
       data-slot="panel-title"
-      className={cn("truncate text-sm font-medium text-text", className)}
+      className={cn(
+        "font-display truncate text-sm font-semibold tracking-tight text-text",
+        className,
+      )}
       {...props}
     />
   );

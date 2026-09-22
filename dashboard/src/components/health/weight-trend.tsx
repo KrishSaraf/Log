@@ -1,16 +1,9 @@
 "use client";
 
-import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
-
 import { ChartFrame } from "@/components/kit";
-import {
-  axisProps,
-  CHART_COLORS,
-  CHART_HEIGHT,
-  gridProps,
-  tooltipProps,
-} from "@/lib/chart-theme";
-import { formatKg, formatShortDate } from "@/lib/format";
+import { SimpleLineChart } from "@/components/kit/simple-charts";
+import { CHART_HEIGHT } from "@/lib/chart-theme";
+import { formatKg } from "@/lib/format";
 import type { WeightPoint } from "@/lib/habits";
 
 export function WeightTrend({
@@ -25,46 +18,28 @@ export function WeightTrend({
       <ChartFrame
         isEmpty
         height={height}
-        emptyLabel="Weight readings will plot here"
+        emptyLabel="Weight readings will plot here — log a weigh-in above"
+        emptyAction={
+          <a
+            href="#quick-log"
+            className="inline-flex min-h-10 items-center rounded-lg border border-lime-line bg-lime-quiet px-3 text-sm font-medium text-lime transition-opacity hover:opacity-90"
+          >
+            Log weight
+          </a>
+        }
       />
     );
   }
 
-  const values = points.map((point) => point.kg);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const pad = Math.max(0.6, (max - min) * 0.12);
-
   return (
     <ChartFrame height={height} caption="Kilograms">
-      <LineChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid {...gridProps} />
-        <XAxis
-          {...axisProps}
-          dataKey="date"
-          tickFormatter={(value: string) => formatShortDate(value)}
-          minTickGap={28}
-        />
-        <YAxis
-          {...axisProps}
-          domain={[min - pad, max + pad]}
-          width={40}
-          tickFormatter={(value: number) => formatKg(value)}
-        />
-        <Tooltip
-          {...tooltipProps}
-          labelFormatter={(value) => formatShortDate(String(value))}
-          formatter={(value) => [`${formatKg(Number(value))} kg`, "Weight"]}
-        />
-        <Line
-          type="monotone"
-          dataKey="kg"
-          stroke={CHART_COLORS.ember}
-          strokeWidth={1.75}
-          dot={false}
-          activeDot={{ r: 3, fill: CHART_COLORS.ember, stroke: "none" }}
-        />
-      </LineChart>
+      <SimpleLineChart
+        points={points.map((p) => ({ date: p.date, value: p.kg }))}
+        height={height}
+        label="Weight"
+        unit="kg"
+        formatValue={(n) => formatKg(n)}
+      />
     </ChartFrame>
   );
 }

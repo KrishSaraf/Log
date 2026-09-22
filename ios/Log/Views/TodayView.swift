@@ -20,6 +20,10 @@ struct TodayView: View {
     @State private var weightPulse = 0
     @State private var showSettings = false
     @State private var showStats = false
+    @State private var loggingSleep = false
+    @State private var loggingWater = false
+    @State private var loggingVitals = false
+    @State private var loggingWeight = false
 
     private var activeHabits: [Habit] { habits.filter(\.isActive) }
     private var habitLookup: [String: [String: String]] { HabitActions.lookup(entries) }
@@ -98,6 +102,15 @@ struct TodayView: View {
                         }
                     }
 
+                    HStack(spacing: 10) {
+                        Button("Sleep") { loggingSleep = true }
+                            .buttonStyle(BlockButtonStyle(filled: false))
+                        Button("Water") { loggingWater = true }
+                            .buttonStyle(BlockButtonStyle(filled: false))
+                        Button("Vitals") { loggingVitals = true }
+                            .buttonStyle(BlockButtonStyle(filled: false))
+                    }
+
                     if prefs.food, !dayMeals.isEmpty {
                         GroupedCard(title: "Food") {
                             ForEach(Array(dayMeals.enumerated()), id: \.element.id) { index, meal in
@@ -152,6 +165,10 @@ struct TodayView: View {
                         if prefs.food {
                             Button("Log meal") { loggingMeal = true }
                         }
+                        Button("Weight") { loggingWeight = true }
+                        Button("Sleep") { loggingSleep = true }
+                        Button("Water") { loggingWater = true }
+                        Button("Vitals & mood") { loggingVitals = true }
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 15, weight: .bold))
@@ -169,6 +186,10 @@ struct TodayView: View {
             }
             .sheet(isPresented: $loggingWorkout) { LogWorkoutSheet() }
             .sheet(isPresented: $loggingMeal) { LogMealSheet() }
+            .sheet(isPresented: $loggingSleep) { LogSleepSheet() }
+            .sheet(isPresented: $loggingWater) { LogWaterSheet() }
+            .sheet(isPresented: $loggingVitals) { LogVitalsSheet() }
+            .sheet(isPresented: $loggingWeight) { LogWeightSheet() }
             .sheet(item: $editingWorkout) { LogWorkoutSheet(workout: $0) }
             .sheet(item: $editingMeal) { LogMealSheet(meal: $0) }
             .sensoryFeedback(.success, trigger: weightPulse)

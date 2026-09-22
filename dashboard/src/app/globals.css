@@ -28,25 +28,31 @@
   --text-muted: #9a9aa3;
   --text-faint: #65656e;
 
-  /* The single accent: ember orange, carried over from the Krish Workout app. */
-  --ember: #ff5a1f;
-  --ember-bright: #ff7845;
-  --ember-quiet: oklch(0.69 0.2 38 / 14%);
-  --ember-line: oklch(0.69 0.2 38 / 32%);
-  --on-ember: #14100d;
+  /* The single accent: electric lime #C6F135 on charcoal. */
+  --lime: #c6f135;
+  --lime-bright: #d4f85a;
+  --lime-quiet: oklch(0.88 0.2 125 / 14%);
+  --lime-line: oklch(0.88 0.2 125 / 34%);
+  --on-lime: #0a0c08;
 
   /* Direction of travel for a metric. Deliberately muted so they never
-     out-shout the ember accent. */
-  --positive: #5fbf8c;
-  --negative: #e2564b;
+     out-shout the lime accent. */
+  --positive: #3dd68c;
+  --negative: #ff5c5c;
 
-  /* Chart series. Ember leads, the rest step away in warmth then temperature. */
-  --chart-1: #ff5a1f;
-  --chart-2: #efa24a;
-  --chart-3: #d9c7a3;
+  /* Chart series. Lime leads; companions stay cool charcoal-adjacent. */
+  --chart-1: #c6f135;
+  --chart-2: #8fd14f;
+  --chart-3: #a8b3a0;
   --chart-4: #6e8091;
   --chart-5: #4a4a52;
   --grid: oklch(1 0 0 / 6%);
+
+  /* Motion */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 180ms;
+  --duration-slow: 280ms;
+  --lime-glow: 0 0 40px rgba(198, 241, 53, 0.12);
 
   /* Corner radii. Three steps, one rule: controls md, panels lg, page-level
      surfaces xl, status pills full. */
@@ -59,8 +65,8 @@
   --card-foreground: var(--text);
   --popover: var(--surface-raised);
   --popover-foreground: var(--text);
-  --primary: var(--ember);
-  --primary-foreground: var(--on-ember);
+  --primary: var(--lime);
+  --primary-foreground: var(--on-lime);
   --secondary: var(--surface-raised);
   --secondary-foreground: var(--text);
   --muted: var(--surface-raised);
@@ -70,15 +76,15 @@
   --destructive: var(--negative);
   --border: var(--line);
   --input: var(--line-strong);
-  --ring: var(--ember);
+  --ring: var(--lime);
   --sidebar: var(--surface-sunken);
   --sidebar-foreground: var(--text);
-  --sidebar-primary: var(--ember);
-  --sidebar-primary-foreground: var(--on-ember);
+  --sidebar-primary: var(--lime);
+  --sidebar-primary-foreground: var(--on-lime);
   --sidebar-accent: var(--surface-raised);
   --sidebar-accent-foreground: var(--text);
   --sidebar-border: var(--line);
-  --sidebar-ring: var(--ember);
+  --sidebar-ring: var(--lime);
 }
 
 @theme inline {
@@ -94,11 +100,11 @@
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-text-faint: var(--text-faint);
-  --color-ember: var(--ember);
-  --color-ember-bright: var(--ember-bright);
-  --color-ember-quiet: var(--ember-quiet);
-  --color-ember-line: var(--ember-line);
-  --color-on-ember: var(--on-ember);
+  --color-lime: var(--lime);
+  --color-lime-bright: var(--lime-bright);
+  --color-lime-quiet: var(--lime-quiet);
+  --color-lime-line: var(--lime-line);
+  --color-on-lime: var(--on-lime);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
   --color-grid: var(--grid);
@@ -133,7 +139,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
   --radius-sm: 0.375rem;
@@ -158,10 +165,22 @@
     @apply font-sans;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(ellipse 90% 55% at 12% -10%, oklch(0.88 0.2 125 / 8%), transparent 55%),
+      radial-gradient(ellipse 70% 45% at 95% 5%, oklch(0.55 0.08 220 / 10%), transparent 50%),
+      linear-gradient(180deg, #0a0a0b 0%, #08080a 100%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
   }
 
   /* iOS Safari zooms focused inputs under 16px — keep forms readable without the jump. */
@@ -186,7 +205,7 @@
   }
 
   ::selection {
-    background: var(--ember-quiet);
+    background: var(--lime-quiet);
     color: var(--text);
   }
 
@@ -239,6 +258,97 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  .reveal {
+    animation: reveal-up var(--duration-slow) var(--ease-out-quint) both;
+  }
+
+  .reveal-delay-1 {
+    animation-delay: 60ms;
+  }
+  .reveal-delay-2 {
+    animation-delay: 120ms;
+  }
+  .reveal-delay-3 {
+    animation-delay: 180ms;
+  }
+  .reveal-delay-4 {
+    animation-delay: 240ms;
+  }
+
+  .ring-glow {
+    filter: drop-shadow(0 0 18px rgba(198, 241, 53, 0.22));
+    animation: ring-breathe 4.5s var(--ease-out-quint) infinite alternate;
+  }
+}
+
+@keyframes ring-breathe {
+  from {
+    filter: drop-shadow(0 0 12px rgba(198, 241, 53, 0.14));
+  }
+  to {
+    filter: drop-shadow(0 0 22px rgba(198, 241, 53, 0.28));
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Habit check-in: springy pop + check draw-in */
+@keyframes habit-tick-pop {
+  0% {
+    transform: scale(0.82);
+  }
+  55% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes habit-check-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes habit-glow-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(198, 241, 53, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(198, 241, 53, 0);
+  }
+}
+
+.habit-tick-pop {
+  animation: habit-tick-pop 420ms var(--ease-out-quint) both;
+}
+
+.habit-check-in {
+  animation: habit-check-in 380ms var(--ease-out-quint) both;
+}
+
+.habit-glow-flash {
+  animation: habit-glow-flash 520ms var(--ease-out-quint) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -249,5 +359,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .ring-glow {
+    animation: none !important;
+  }
+
+  .habit-tick-pop,
+  .habit-check-in,
+  .habit-glow-flash {
+    animation: none !important;
   }
 }

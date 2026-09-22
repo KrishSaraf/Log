@@ -122,6 +122,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user }) {
       if (user.id) {
         await claimLegacyDataIfNeeded(user.id);
+        // Keep demo / first sessions from landing on empty habit chains.
+        const { seedDemoHabitHistoryIfEmpty } = await import(
+          "@/lib/seed-habits"
+        );
+        await seedDefaultHabitsForUser(user.id);
+        await seedDemoHabitHistoryIfEmpty(user.id);
       }
     },
   },

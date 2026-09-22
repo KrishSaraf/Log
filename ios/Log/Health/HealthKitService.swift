@@ -101,6 +101,8 @@ final class HealthKitService {
             workouts: workouts
         )
         loadFailed = !hasAnything
+
+        await HealthKitRemoteSync.pushSnapshot(snapshot, access: access)
     }
 
     private func currentAccess() -> HealthAccess {

@@ -117,7 +117,7 @@ export function DayHabitView({ questions, ranges, weights, sessions }: Props) {
             className={cn(
               "min-h-11 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
               selected === today
-                ? "border-ember-line bg-ember-quiet text-ember"
+                ? "border-lime-line bg-lime-quiet text-lime"
                 : "border-line text-text-muted hover:border-line-strong hover:text-text",
             )}
           >
@@ -172,14 +172,14 @@ export function DayHabitView({ questions, ranges, weights, sessions }: Props) {
                 className={cn(
                   "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-center transition-colors",
                   isSelected
-                    ? "bg-ember text-on-ember"
+                    ? "bg-lime text-on-lime"
                     : "bg-surface-raised text-text-muted hover:bg-white/[0.04] hover:text-text",
                 )}
               >
                 <span
                   className={cn(
                     "text-[10px] font-medium uppercase tracking-wide",
-                    isSelected ? "text-on-ember/70" : "text-text-faint",
+                    isSelected ? "text-on-lime/70" : "text-text-faint",
                   )}
                 >
                   {weekday}
@@ -187,7 +187,7 @@ export function DayHabitView({ questions, ranges, weights, sessions }: Props) {
                 <span
                   className={cn(
                     "num text-base font-semibold leading-none",
-                    isSelected ? "text-on-ember" : "text-text",
+                    isSelected ? "text-on-lime" : "text-text",
                   )}
                 >
                   {d}
@@ -197,8 +197,8 @@ export function DayHabitView({ questions, ranges, weights, sessions }: Props) {
                     "mt-0.5 size-1 rounded-full",
                     hasLog
                       ? isSelected
-                        ? "bg-on-ember"
-                        : "bg-ember"
+                        ? "bg-on-lime"
+                        : "bg-lime"
                       : "bg-transparent",
                   )}
                   aria-hidden

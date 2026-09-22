@@ -90,7 +90,7 @@ export function MetricCard({
           <IconComponent
             size={14}
             weight="regular"
-            className="shrink-0 text-text-faint transition-colors duration-150 group-hover:text-ember"
+            className="shrink-0 text-text-faint transition-colors duration-150 group-hover:text-lime"
             aria-hidden
           />
         ) : null}

@@ -1,10 +1,12 @@
 import {
   BarbellIcon,
+  BooksIcon,
   ForkKnifeIcon,
   HeartbeatIcon,
   ListChecksIcon,
-  NotePencilIcon,
+  PlugsConnectedIcon,
   SparkleIcon,
+  SunIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon } from "@phosphor-icons/react";
 
@@ -19,9 +21,9 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
-    label: "Habits",
-    icon: ListChecksIcon,
-    description: "One day at a time — habits, weight, sessions",
+    label: "Today",
+    icon: SunIcon,
+    description: "Activity rings, recent logs, and shortcuts",
   },
   {
     href: "/workouts",
@@ -43,8 +45,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/log",
-    label: "Log",
-    icon: NotePencilIcon,
+    label: "Habits",
+    icon: ListChecksIcon,
     description: "Daily and weekly self-tracking questions",
   },
   {
@@ -52,6 +54,22 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Insights",
     icon: SparkleIcon,
     description: "Patterns pulled out of the data",
+  },
+  {
+    href: "/settings/connections",
+    label: "Connections",
+    icon: PlugsConnectedIcon,
+    description: "HealthKit, Health Connect, and other sources",
+  },
+];
+
+/** Secondary chrome links (not in the primary rail). */
+export const SECONDARY_NAV: NavItem[] = [
+  {
+    href: "/workouts/library",
+    label: "Exercise library",
+    icon: BooksIcon,
+    description: "Browse movements and form media",
   },
 ];
 

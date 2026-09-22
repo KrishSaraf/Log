@@ -92,6 +92,7 @@ export function FoodPhotoLogger() {
         body: JSON.stringify({
           mealName: draft.mealName,
           mealType: draft.mealType,
+          source: "photo",
           foods: draft.foods,
           notes: draft.assumptions?.join(" · ") || null,
         }),
@@ -119,7 +120,7 @@ export function FoodPhotoLogger() {
           </div>
           <label
             className={cn(
-              "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-ember px-4 py-2.5 text-sm font-medium text-on-ember transition-opacity",
+              "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-lime px-4 py-2.5 text-sm font-medium text-on-lime transition-opacity",
               busy && "pointer-events-none opacity-60",
             )}
           >
@@ -145,7 +146,7 @@ export function FoodPhotoLogger() {
             value={hint}
             onChange={(e) => setHint(e.target.value)}
             placeholder="e.g. leftover pasta, one plate"
-            className="mt-1.5 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-ember-line"
+            className="mt-1.5 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-lime-line"
           />
         </label>
 
@@ -210,7 +211,7 @@ export function FoodPhotoLogger() {
               type="button"
               onClick={onSave}
               disabled={busy === "save" || saved}
-              className="min-h-11 rounded-xl bg-ember px-4 py-2.5 text-sm font-medium text-on-ember disabled:opacity-50"
+              className="min-h-11 rounded-xl bg-lime px-4 py-2.5 text-sm font-medium text-on-lime disabled:opacity-50"
             >
               {saved ? "Saved" : busy === "save" ? "Saving…" : "Save meal"}
             </button>

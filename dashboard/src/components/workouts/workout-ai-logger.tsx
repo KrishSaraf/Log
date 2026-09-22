@@ -129,7 +129,7 @@ export function WorkoutAiLogger() {
           className={cn(
             "flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
             mode === "text"
-              ? "bg-ember text-on-ember"
+              ? "bg-lime text-on-lime"
               : "text-text-muted hover:text-text",
           )}
         >
@@ -142,7 +142,7 @@ export function WorkoutAiLogger() {
           className={cn(
             "flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
             mode === "photo"
-              ? "bg-ember text-on-ember"
+              ? "bg-lime text-on-lime"
               : "text-text-muted hover:text-text",
           )}
         >
@@ -162,13 +162,13 @@ export function WorkoutAiLogger() {
             onChange={(e) => setText(e.target.value)}
             rows={5}
             placeholder="What did you do?"
-            className="mt-3 w-full resize-y rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-ember-line"
+            className="mt-3 w-full resize-y rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-lime-line"
           />
           <button
             type="button"
             onClick={analyzeText}
             disabled={!text.trim() || busy === "analyze"}
-            className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-ember px-4 py-2.5 text-sm font-medium text-on-ember disabled:opacity-50"
+            className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-lime px-4 py-2.5 text-sm font-medium text-on-lime disabled:opacity-50"
           >
             {busy === "analyze" ? (
               <SpinnerGapIcon size={16} className="animate-spin" />
@@ -188,12 +188,12 @@ export function WorkoutAiLogger() {
               value={hint}
               onChange={(e) => setHint(e.target.value)}
               placeholder="e.g. last set was 8 reps at 70"
-              className="mt-1.5 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-ember-line"
+              className="mt-1.5 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-sm text-text outline-none placeholder:text-text-faint focus:border-lime-line"
             />
           </label>
           <label
             className={cn(
-              "mt-3 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-ember px-4 py-2.5 text-sm font-medium text-on-ember",
+              "mt-3 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-lime px-4 py-2.5 text-sm font-medium text-on-lime",
               busy && "pointer-events-none opacity-60",
             )}
           >
@@ -243,7 +243,7 @@ export function WorkoutAiLogger() {
               >
                 <p className="text-sm font-medium text-text">{ex.name}</p>
                 {ex.matchedName ? (
-                  <p className="mt-0.5 text-xs text-ember">Matched: {ex.matchedName}</p>
+                  <p className="mt-0.5 text-xs text-lime">Matched: {ex.matchedName}</p>
                 ) : (
                   <p className="mt-0.5 text-xs text-text-faint">Custom movement</p>
                 )}
@@ -266,7 +266,7 @@ export function WorkoutAiLogger() {
               type="button"
               onClick={onSave}
               disabled={busy === "save" || saved}
-              className="min-h-11 rounded-xl bg-ember px-4 py-2.5 text-sm font-medium text-on-ember disabled:opacity-50"
+              className="min-h-11 rounded-xl bg-lime px-4 py-2.5 text-sm font-medium text-on-lime disabled:opacity-50"
             >
               {saved ? "Saved" : busy === "save" ? "Saving…" : "Save workout"}
             </button>

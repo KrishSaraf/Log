@@ -401,6 +401,7 @@ final class SyncEngine {
             "date": meal.day,
             "mealName": meal.name,
             "mealType": meal.mealType.lowercased(),
+            "source": "manual",
             "foods": [
                 [
                     "name": meal.name,
